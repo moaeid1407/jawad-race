@@ -9,15 +9,16 @@ body{
   margin:0;
   font-family: "Arial", sans-serif;
   background:#0b1e1b;
-  color:#fff;
+  color:#ffffff;
 }
 header{
   text-align:center;
   padding:20px;
+  border-bottom:1px solid #1e3f39;
 }
 header h1{
   margin:0;
-  font-size:34px;
+  font-size:36px;
 }
 header h3{
   margin:8px 0 0;
@@ -26,10 +27,159 @@ header h3{
 }
 .container{
   display:flex;
-  height:calc(100vh - 140px);
+  height:calc(100vh - 120px);
 }
 .panel{
   padding:15px;
   overflow:auto;
 }
-.left{width:25%;borde
+.left{width:25%;border-left:1px solid #1e3f39;}
+.center{width:50%;text-align:center;}
+.right{width:25%;border-right:1px solid #1e3f39;}
+
+.card{
+  background:#123a33;
+  margin-bottom:8px;
+  padding:8px;
+  border-radius:6px;
+  font-size:14px;
+}
+
+.timer{
+  font-size:60px;
+  margin:20px 0;
+  color:#ffeb99;
+}
+
+button{
+  padding:12px 20px;
+  font-size:16px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  margin:6px;
+}
+.start{background:#1e7f6d;color:#fff;}
+.pause{background:#555;color:#fff;}
+.stop{background:#7a2b2b;color:#fff;}
+
+.status{
+  margin-top:15px;
+  font-size:20px;
+  color:#dff;
+}
+
+input{
+  width:80%;
+  padding:14px;
+  font-size:18px;
+  margin-top:20px;
+  border-radius:6px;
+  border:none;
+  text-align:center;
+}
+.hidden{display:none;}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🕊️ سباق الجواد المعرفي</h1>
+  <h3>تحت إشراف لجنة منابر النور بالجفر</h3>
+</header>
+
+<div class="container">
+
+  <!-- المشاركون -->
+  <div class="panel left">
+    <h3>المشاركون</h3>
+    <div id="players"></div>
+  </div>
+
+  <!-- الوسط -->
+  <div class="panel center">
+
+    <div id="hostControls">
+      <button class="stop" onclick="closeJoin()">⛔ إغلاق التسجيل</button>
+      <button class="pause" onclick="togglePause()">⏸️ إيقاف / استئناف</button>
+      <button class="start" onclick="startRace()">▶️ بدء السباق</button>
+    </div>
+
+    <div class="timer" id="globalTimer">00:00</div>
+
+    <div class="status" id="statusText">بانتظار بدء السباق</div>
+
+    <div id="joinBox">
+      <input id="playerName" placeholder="اكتب اسمك الثلاثي فقط">
+      <div class="status">لا تضغط ابدأ حتى تعلن المنصّة</div>
+    </div>
+
+  </div>
+
+  <!-- الترتيب -->
+  <div class="panel right">
+    <h3>🏆 الترتيب</h3>
+    <div id="ranking"></div>
+  </div>
+
+</div>
+
+<script>
+let joiningOpen = true;
+let started = false;
+let paused = false;
+let startTime = 0;
+let timerInterval = null;
+
+let players = [];
+let results = [];
+
+function renderPlayers(){
+  const box = document.getElementById("players");
+  box.innerHTML = "";
+  players.forEach(p=>{
+    box.innerHTML += `<div class="card">${p}</div>`;
+  });
+}
+
+function closeJoin(){
+  joiningOpen = false;
+  document.getElementById("statusText").innerText = "تم إغلاق التسجيل";
+}
+
+function startRace(){
+  if(started) return;
+  started = true;
+  startTime = Date.now();
+  document.getElementById("statusText").innerText = "السباق جارٍ الآن";
+
+  timerInterval = setInterval(()=>{
+    if(paused) return;
+    let t = Math.floor((Date.now() - startTime)/1000);
+    let m = String(Math.floor(t/60)).padStart(2,"0");
+    let s = String(t%60).padStart(2,"0");
+    document.getElementById("globalTimer").innerText = m + ":" + s;
+  },1000);
+}
+
+function togglePause(){
+  paused = !paused;
+  document.getElementById("statusText").innerText =
+    paused ? "⏸️ السباق متوقف مؤقتًا" : "▶️ السباق مستمر";
+}
+
+// إدخال الاسم
+document.getElementById("playerName").addEventListener("keypress",function(e){
+  if(e.key==="Enter" && joiningOpen){
+    let name = this.value.trim();
+    if(name.length < 6) return;
+    players.push(name);
+    this.value="";
+    renderPlayers();
+  }
+});
+</script>
+
+</body>
+</html>
