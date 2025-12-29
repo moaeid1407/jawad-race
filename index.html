@@ -2,229 +2,464 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>سباق الإمام الجواد عليه السلام</title>
 
   <style>
+    :root{
+      --bg:#071c1b;
+      --panel:#0e2a28;
+      --accent:#f59e0b;
+      --green:#22c55e;
+      --text:#ffffff;
+      --muted:rgba(255,255,255,.7);
+      --dash:rgba(34,197,94,.55);
+    }
+    *{box-sizing:border-box}
     body{
       margin:0;
       font-family: Arial, sans-serif;
-      background:#0b1e1b;
-      color:#fff;
+      background: var(--bg);
+      color: var(--text);
       min-height:100vh;
       display:flex;
       justify-content:center;
       align-items:flex-start;
+      padding: 30px 14px;
     }
     .wrap{
-      width:min(900px,95vw);
-      margin:30px auto;
+      width: min(760px, 100%);
       text-align:center;
     }
-    h1{margin:10px 0;}
-    .sub{color:#ccc;margin-bottom:15px;}
+    h1{
+      margin: 12px 0 6px;
+      font-size: clamp(28px, 4vw, 44px);
+      letter-spacing:.3px;
+    }
+    .sub{
+      margin:0 0 18px;
+      color: var(--muted);
+      font-size: 16px;
+    }
 
+    .waiting{
+      border: 2px dashed var(--dash);
+      border-radius: 18px;
+      padding: 18px 16px;
+      margin: 16px auto 18px;
+      background: rgba(14,42,40,.35);
+      color: var(--green);
+      font-size: clamp(18px, 2.3vw, 24px);
+      line-height:1.7;
+      width: min(640px, 100%);
+    }
     .card{
-      background:#0f2a26;
-      border-radius:16px;
-      padding:20px;
+      width:min(640px, 100%);
+      margin: 0 auto;
+      background: rgba(14,42,40,.55);
+      border-radius: 22px;
+      padding: 18px 16px 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
     }
 
     input{
-      width:min(400px,90%);
-      padding:14px;
-      border-radius:10px;
-      border:none;
-      font-size:18px;
+      width: min(520px, 100%);
+      padding: 14px 14px;
+      border-radius: 14px;
+      border: 0;
+      outline: none;
+      font-size: 18px;
+      text-align:center;
+      margin-top: 6px;
     }
 
+    .hint{
+      margin: 10px 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .btns{
+      display:flex;
+      gap: 10px;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-top: 10px;
+    }
     button{
-      padding:12px 20px;
-      border-radius:10px;
-      border:none;
-      font-size:16px;
-      font-weight:bold;
+      border:0;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 16px;
       cursor:pointer;
-      margin:6px;
-      background:#f6a000;
+      background: var(--accent);
+      color:#111;
+      font-weight:700;
+      min-width: 150px;
     }
-
-    .secondary{background:#333;color:#fff;}
-    .danger{background:#b00020;color:#fff;}
-
-    .waiting{
-      border:2px dashed #26c281;
-      padding:15px;
-      border-radius:12px;
-      margin-bottom:15px;
-      font-size:20px;
-      color:#b8ffd9;
+    button.secondary{
+      background: rgba(255,255,255,.12);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.18);
+      font-weight:600;
+    }
+    button.danger{
+      background:#ef4444;
+      color:#fff;
+    }
+    button:disabled{
+      opacity:.55;
+      cursor:not-allowed;
     }
 
     .timer{
-      font-size:64px;
-      margin-top:15px;
+      font-size: clamp(52px, 8vw, 78px);
+      margin: 14px 0 8px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+    .footer{
+      margin-top: 10px;
+      color: rgba(255,255,255,.65);
+      font-size: 13px;
     }
 
-    .hidden{display:none;}
-
-    .grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-top:15px;
-    }
-
-    .box{
-      border:1px solid #444;
-      border-radius:10px;
-      padding:10px;
+    /* Admin panel */
+    .adminBox{
+      margin-top: 18px;
       text-align:right;
-      min-height:120px;
+      background: rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      padding: 14px;
     }
-
-    @media(max-width:700px){
-      .grid{grid-template-columns:1fr;}
+    .adminTitle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .adminTitle h3{
+      margin:0;
+      font-size: 18px;
+    }
+    .pill{
+      padding:6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: rgba(34,197,94,.15);
+      color: var(--green);
+      border: 1px solid rgba(34,197,94,.35);
+      white-space:nowrap;
+    }
+    .list{
+      max-height: 260px;
+      overflow:auto;
+      padding: 10px;
+      background: rgba(255,255,255,.06);
+      border-radius: 12px;
+      text-align:right;
+    }
+    .row{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding: 8px 8px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      font-size: 14px;
+    }
+    .row:last-child{border-bottom:0}
+    .muted{color: rgba(255,255,255,.7)}
+    .ok{color: var(--green); font-weight:700}
+    .small{
+      font-size:12px;
+      color: rgba(255,255,255,.65);
+      margin-top: 6px;
+      text-align:right;
+      line-height:1.6;
     }
   </style>
+
+  <!-- Firebase (Compat for simple use in one HTML file) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 
 <body>
-<div class="wrap">
-  <h1>سباق الإمام الجواد عليه السلام</h1>
-  <div class="sub">مسابقة تفاعلية – لجنة منابر النور بالجفر</div>
+  <div class="wrap">
+    <h1>سباق الإمام الجواد عليه السلام</h1>
+    <p class="sub">مسابقة تفاعلية — إشراف لجنة منابر النور بالجفر</p>
 
-  <div class="card">
-    <div class="waiting" id="waitingMsg">
-      ⏳ بانتظار بدء السباق من المنظم<br>🚦 استعدوا
+    <div id="waitingMessage" class="waiting">
+      ⏳ بانتظار بدء السباق من المنظم<br/>
+      🚦 استعدوا
     </div>
 
-    <!-- المتسابق -->
-    <div id="playerUI">
-      <input id="playerName" placeholder="اكتب اسمك الثلاثي">
-      <div>
-        <button class="secondary" id="joinBtn">تسجيل</button>
-      </div>
-    </div>
+    <div class="card">
+      <div id="playerUI">
+        <input id="playerName" placeholder="اكتب اسمك الثلاثي فقط" autocomplete="off" />
+        <div class="hint">اضغط <b>تسجيل</b> بعد كتابة الاسم</div>
 
-    <!-- المتحكم -->
-    <div id="adminUI" class="hidden">
-      <input id="adminPin" placeholder="PIN المتحكم" style="width:200px">
-      <div>
-        <button id="unlockBtn">تفعيل التحكم</button>
-        <button id="startBtn" disabled>▶️ بدء السباق</button>
-        <button class="danger" id="resetBtn" disabled>إعادة ضبط</button>
-      </div>
-
-      <div class="grid">
-        <div class="box">
-          <b>المتسابقون</b>
-          <pre id="playersList">—</pre>
+        <div class="btns">
+          <button id="joinBtn">تسجيل</button>
         </div>
-        <div class="box">
-          <b>حالة السباق</b>
-          <pre id="raceState">—</pre>
+
+        <div class="timer" id="timer">00:00</div>
+      </div>
+
+      <div id="adminUI" style="display:none;">
+        <div class="btns">
+          <button id="adminStartBtn">▶️ بدء السباق</button>
+          <button class="secondary" id="adminStopBtn">⏸️ إيقاف / متابعة</button>
+          <button class="danger" id="adminResetBtn">♻️ تصفير</button>
+        </div>
+
+        <div class="timer" id="adminTimer">00:00</div>
+
+        <div class="adminBox">
+          <div class="adminTitle">
+            <h3>لوحة المتحكم</h3>
+            <div class="pill" id="countPill">0 متسابق</div>
+          </div>
+
+          <div class="list" id="playersList"></div>
+
+          <div class="small">
+            ✅ الأسماء تُسحب لايف من Firestore.<br/>
+            ✅ المتسابق يرى “بانتظار بدء السباق من المنظم” ولا يقدر يبدأ السباق من جواله.
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="timer" id="timer">00:00</div>
+      <div class="footer">«اللهم ارزقنا توفيق الطاعة، وبعد المعصية، وصدق النية» — الإمام الجواد (ع)</div>
+    </div>
   </div>
-</div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, onSnapshot,
-  doc, setDoc, updateDoc
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-/* 🔴 ضع إعدادات Firebase هنا */
+<script>
+/* =========================
+   1) ضع Firebase Config هنا
+   ========================= */
 const firebaseConfig = {
-  apiKey: "PUT_YOURS_HERE",
-  authDomain: "PUT_YOURS_HERE",
-  projectId: "PUT_YOURS_HERE",
-  storageBucket: "PUT_YOURS_HERE",
-  messagingSenderId: "PUT_YOURS_HERE",
-  appId: "PUT_YOURS_HERE",
+  apiKey: "PUT_YOUR_API_KEY_HERE",
+  authDomain: "PUT_YOUR_AUTH_DOMAIN_HERE",
+  projectId: "jawad-race",
+  storageBucket: "PUT_YOUR_STORAGE_BUCKET_HERE",
+  messagingSenderId: "PUT_YOUR_SENDER_ID_HERE",
+  appId: "PUT_YOUR_APP_ID_HERE"
 };
 
-const ADMIN_PIN = "2580";
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+/* =========================
+   2) إعدادات السباق الثابتة
+   ========================= */
+const RACE_ID = "current"; // كل الأجهزة لازم تكون على نفس السباق
+const raceRef = db.collection("races").doc(RACE_ID);
+const playersRef = db.collection("players");
 
-const params = new URLSearchParams(location.search);
-const isAdmin = params.get("admin") === "1";
+const qs = new URLSearchParams(location.search);
+const isAdmin = qs.get("admin") === "1";
 
-const playersCol = collection(db,"players");
-const raceRef = doc(db,"race","main");
+/* =========================
+   3) عناصر الواجهة
+   ========================= */
+const waitingMessage = document.getElementById("waitingMessage");
 
-const waitingMsg = document.getElementById("waitingMsg");
+const playerUI = document.getElementById("playerUI");
+const adminUI  = document.getElementById("adminUI");
+
+const playerName = document.getElementById("playerName");
+const joinBtn = document.getElementById("joinBtn");
 const timerEl = document.getElementById("timer");
 
-let timerInt=null;
+const adminStartBtn = document.getElementById("adminStartBtn");
+const adminStopBtn  = document.getElementById("adminStopBtn");
+const adminResetBtn = document.getElementById("adminResetBtn");
+const adminTimerEl = document.getElementById("adminTimer");
 
-function startTimer(start){
-  clearInterval(timerInt);
-  timerInt=setInterval(()=>{
-    const diff=Date.now()-start;
-    const s=Math.floor(diff/1000);
-    timerEl.textContent=
-      String(Math.floor(s/60)).padStart(2,"0")+":"+
-      String(s%60).padStart(2,"0");
-  },300);
+const playersList = document.getElementById("playersList");
+const countPill = document.getElementById("countPill");
+
+/* =========================
+   4) مؤقت محلي
+   ========================= */
+let tickInterval = null;
+
+function fmt(ms){
+  const total = Math.max(0, Math.floor(ms/1000));
+  const m = String(Math.floor(total/60)).padStart(2,"0");
+  const s = String(total%60).padStart(2,"0");
+  return `${m}:${s}`;
 }
 
-onSnapshot(raceRef,snap=>{
-  if(!snap.exists()) return;
-  const d=snap.data();
-  document.getElementById("raceState").textContent=JSON.stringify(d,null,2);
-  if(d.started){
-    waitingMsg.classList.add("hidden");
-    startTimer(d.startTime);
-  }else{
-    waitingMsg.classList.remove("hidden");
-    timerEl.textContent="00:00";
+function stopTick(){
+  if(tickInterval){ clearInterval(tickInterval); tickInterval = null; }
+}
+
+function startTick(startAtMs, paused){
+  stopTick();
+  const update = () => {
+    if(paused) return;
+    const now = Date.now();
+    const diff = now - startAtMs;
+    const t = fmt(diff);
+    timerEl.textContent = t;
+    adminTimerEl.textContent = t;
+  };
+  update();
+  tickInterval = setInterval(update, 250);
+}
+
+/* =========================
+   5) وضع الواجهة (Admin/Player)
+   ========================= */
+if(isAdmin){
+  playerUI.style.display = "none";
+  adminUI.style.display  = "block";
+} else {
+  playerUI.style.display = "block";
+  adminUI.style.display  = "none";
+}
+
+/* =========================
+   6) تسجيل المتسابق
+   ========================= */
+async function joinRace(){
+  const name = (playerName.value || "").trim();
+  if(name.length < 5){
+    alert("اكتب الاسم الثلاثي بشكل صحيح");
+    return;
+  }
+
+  joinBtn.disabled = true;
+
+  // نمنع تكرار نفس الاسم في نفس السباق بشكل بسيط:
+  const exists = await playersRef
+    .where("raceId","==",RACE_ID)
+    .where("name","==",name)
+    .limit(1)
+    .get();
+
+  if(!exists.empty){
+    alert("هذا الاسم مسجل مسبقًا ✅");
+    joinBtn.disabled = false;
+    return;
+  }
+
+  await playersRef.add({
+    name,
+    raceId: RACE_ID,
+    joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  alert("تم التسجيل ✅ انتظر بدء السباق من المنظم");
+  joinBtn.disabled = true;
+  playerName.disabled = true;
+}
+
+joinBtn?.addEventListener("click", joinRace);
+playerName?.addEventListener("keypress", (e)=>{ if(e.key==="Enter") joinRace(); });
+
+/* =========================
+   7) لوحة المتحكم: عرض الأسماء لايف
+   ========================= */
+if(isAdmin){
+  playersRef
+    .where("raceId","==",RACE_ID)
+    .orderBy("joinedAt","asc")
+    .onSnapshot((snap)=>{
+      const arr = [];
+      snap.forEach(doc => arr.push({id: doc.id, ...doc.data()}));
+
+      countPill.textContent = `${arr.length} متسابق`;
+
+      playersList.innerHTML = arr.length ? "" : `<div class="muted">لا يوجد متسابقين مسجلين بعد…</div>`;
+      arr.forEach((p, idx)=>{
+        const joined = p.joinedAt?.toDate ? p.joinedAt.toDate() : null;
+        const time = joined ? joined.toLocaleTimeString("ar-SA") : "--:--";
+        const div = document.createElement("div");
+        div.className = "row";
+        div.innerHTML = `<div>${idx+1}) ${p.name}</div><div class="muted">${time}</div>`;
+        playersList.appendChild(div);
+      });
+    });
+}
+
+/* =========================
+   8) حالة السباق (تصل للكل)
+   races/current:
+   { status: "waiting|running", startAt: timestamp, paused: bool }
+   ========================= */
+raceRef.onSnapshot(async (doc)=>{
+  if(!doc.exists){
+    // إنشاء مستند السباق لأول مرة
+    await raceRef.set({
+      status: "waiting",
+      paused: false,
+      startAt: null,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    return;
+  }
+
+  const data = doc.data();
+  const status = data.status || "waiting";
+  const paused = !!data.paused;
+
+  if(status === "waiting"){
+    waitingMessage.style.display = "block";
+    stopTick();
+    timerEl.textContent = "00:00";
+    adminTimerEl.textContent = "00:00";
+  }
+
+  if(status === "running"){
+    waitingMessage.style.display = "none";
+    const startAt = data.startAt?.toDate ? data.startAt.toDate().getTime() : Date.now();
+    startTick(startAt, paused);
   }
 });
 
+/* =========================
+   9) أزرار المتحكم
+   ========================= */
+async function adminStart(){
+  // يبدأ السباق للجميع بنفس اللحظة (ServerTimestamp)
+  await raceRef.set({
+    status: "running",
+    paused: false,
+    startAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+}
+
+async function adminTogglePause(){
+  const doc = await raceRef.get();
+  const paused = !!doc.data()?.paused;
+  await raceRef.set({
+    paused: !paused,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+}
+
+async function adminReset(){
+  // يرجع Waiting ويصفر التايمر للجميع
+  await raceRef.set({
+    status: "waiting",
+    paused: false,
+    startAt: null,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+}
+
 if(isAdmin){
-  document.getElementById("playerUI").classList.add("hidden");
-  document.getElementById("adminUI").classList.remove("hidden");
-
-  onSnapshot(playersCol,snap=>{
-    let t="";
-    let i=1;
-    snap.forEach(d=>{
-      t+=`${i++}) ${d.data().name}\n`;
-    });
-    document.getElementById("playersList").textContent=t||"—";
-  });
-
-  document.getElementById("unlockBtn").onclick=()=>{
-    if(document.getElementById("adminPin").value===ADMIN_PIN){
-      document.getElementById("startBtn").disabled=false;
-      document.getElementById("resetBtn").disabled=false;
-      alert("تم تفعيل التحكم");
-    }else alert("PIN خطأ");
-  };
-
-  document.getElementById("startBtn").onclick=()=>{
-    updateDoc(raceRef,{started:true,startTime:Date.now()});
-  };
-  document.getElementById("resetBtn").onclick=()=>{
-    updateDoc(raceRef,{started:false,startTime:0});
-  };
-
-}else{
-  document.getElementById("joinBtn").onclick=async()=>{
-    const name=document.getElementById("playerName").value.trim();
-    if(name.length<2) return alert("اكتب اسم صحيح");
-    await addDoc(playersCol,{name,joinedAt:Date.now()});
-    alert("تم التسجيل، انتظر بدء السباق");
-  };
+  adminStartBtn.addEventListener("click", adminStart);
+  adminStopBtn.addEventListener("click", adminTogglePause);
+  adminResetBtn.addEventListener("click", adminReset);
 }
 </script>
+
 </body>
 </html>
