@@ -15,6 +15,7 @@
       --muted:rgba(255,255,255,.7);
       --dash:rgba(34,197,94,.55);
       --danger:#ef4444;
+      --card: rgba(14,42,40,.55);
     }
     *{box-sizing:border-box}
     body{
@@ -26,45 +27,50 @@
       display:flex;
       justify-content:center;
       align-items:flex-start;
-      padding: 30px 14px;
+      padding: 26px 14px;
     }
-    .wrap{ width: min(860px, 100%); text-align:center; }
-    h1{ margin: 12px 0 6px; font-size: clamp(28px, 4vw, 44px); }
-    .sub{ margin:0 0 18px; color: var(--muted); font-size: 16px; }
+    .wrap{ width: min(920px, 100%); text-align:center; }
+    h1{ margin: 10px 0 6px; font-size: clamp(28px, 4vw, 44px); }
+    .sub{ margin:0 0 14px; color: var(--muted); font-size: 16px; }
 
-    .waiting{
+    .banner{
       border: 2px dashed var(--dash);
       border-radius: 18px;
-      padding: 18px 16px;
-      margin: 16px auto 18px;
-      background: rgba(14,42,40,.35);
+      padding: 14px 14px;
+      margin: 14px auto 14px;
+      background: rgba(14,42,40,.28);
       color: var(--green);
-      font-size: clamp(18px, 2.3vw, 24px);
+      font-size: clamp(16px, 2.1vw, 20px);
       line-height:1.7;
-      width: min(740px, 100%);
+      width: min(780px, 100%);
+      text-align:center;
     }
+
     .card{
-      width:min(740px, 100%);
+      width:min(780px, 100%);
       margin: 0 auto;
-      background: rgba(14,42,40,.55);
+      background: var(--card);
       border-radius: 22px;
-      padding: 18px 16px 20px;
+      padding: 16px 16px 18px;
       box-shadow: 0 20px 60px rgba(0,0,0,.25);
     }
 
-    input, textarea, select{
-      width: min(640px, 100%);
-      padding: 12px 14px;
+    input{
+      width: min(560px, 100%);
+      padding: 14px 14px;
       border-radius: 14px;
       border: 0;
       outline: none;
-      font-size: 16px;
-      text-align:right;
-      margin-top: 8px;
+      font-size: 18px;
+      text-align:center;
+      margin-top: 6px;
     }
-    textarea{ min-height: 90px; resize: vertical; }
 
-    .hint{ margin: 10px 0 14px; color: var(--muted); font-size: 14px; }
+    .hint{
+      margin: 10px 0 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
 
     .btns{
       display:flex;
@@ -81,87 +87,50 @@
       cursor:pointer;
       background: var(--accent);
       color:#111;
-      font-weight:700;
-      min-width: 150px;
+      font-weight:800;
+      min-width: 170px;
     }
     button.secondary{
       background: rgba(255,255,255,.12);
       color: #fff;
       border: 1px solid rgba(255,255,255,.18);
-      font-weight:600;
+      font-weight:700;
     }
     button.danger{
       background: var(--danger);
       color:#fff;
     }
-    button:disabled{ opacity:.55; cursor:not-allowed; }
-
-    .timer{
-      font-size: clamp(52px, 8vw, 78px);
-      margin: 14px 0 8px;
-      font-weight: 800;
-      letter-spacing: 1px;
+    button:disabled{
+      opacity:.55;
+      cursor:not-allowed;
     }
 
-    .footer{
-      margin-top: 10px;
-      color: rgba(255,255,255,.65);
-      font-size: 13px;
-    }
-
-    /* Admin */
-    .adminBox{
-      margin-top: 18px;
-      text-align:right;
-      background: rgba(0,0,0,.18);
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 18px;
-      padding: 14px;
-    }
-    .adminTitle{
+    .timerRow{
       display:flex;
+      gap: 12px;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-top: 14px;
       align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:10px;
     }
-    .adminTitle h3{ margin:0; font-size: 18px; }
     .pill{
-      padding:6px 10px;
+      padding: 8px 12px;
       border-radius: 999px;
-      font-size: 12px;
-      background: rgba(34,197,94,.15);
-      color: var(--green);
-      border: 1px solid rgba(34,197,94,.35);
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: rgba(255,255,255,.85);
+      font-size: 13px;
       white-space:nowrap;
     }
-    .list{
-      max-height: 260px;
-      overflow:auto;
-      padding: 10px;
-      background: rgba(255,255,255,.06);
-      border-radius: 12px;
-      text-align:right;
-    }
-    .row{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      padding: 8px 8px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      font-size: 14px;
-    }
-    .row:last-child{ border-bottom:0; }
-    .muted{ color: rgba(255,255,255,.7); }
-    .small{
-      font-size:12px;
-      color: rgba(255,255,255,.65);
-      margin-top: 8px;
-      text-align:right;
-      line-height:1.7;
+    .bigTimer{
+      font-size: clamp(44px, 7vw, 72px);
+      font-weight: 900;
+      letter-spacing: 1px;
+      margin: 0;
+      color: #fff;
     }
 
-    /* Question UI */
+    /* Question box */
     .qBox{
       margin-top: 14px;
       padding: 14px;
@@ -172,9 +141,9 @@
     }
     .qTitle{
       font-size: 18px;
-      font-weight: 800;
+      font-weight: 900;
       margin: 0 0 10px;
-      line-height:1.7;
+      line-height:1.8;
     }
     .options{
       display:grid;
@@ -191,11 +160,76 @@
       border: 1px solid rgba(255,255,255,.10);
       cursor:pointer;
       user-select:none;
+      transition: transform .05s ease;
     }
+    .opt:active{ transform: scale(.99); }
     .opt input{ width:auto; margin:0; }
-    .opt span{ line-height:1.6; }
-    .statusOk{ color: var(--green); font-weight:800; margin-top:10px; }
-    .statusWarn{ color: #fbbf24; font-weight:800; margin-top:10px; }
+    .opt span{ line-height:1.7; }
+
+    .status{
+      margin-top: 10px;
+      font-weight: 900;
+      text-align:center;
+      display:none;
+    }
+    .ok{ color: var(--green); }
+    .warn{ color: #fbbf24; }
+
+    /* Admin panels */
+    .adminGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 14px;
+      text-align:right;
+    }
+    .adminBox{
+      background: rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      padding: 14px;
+    }
+    .adminTitle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .adminTitle h3{
+      margin:0;
+      font-size: 18px;
+    }
+    .list{
+      max-height: 280px;
+      overflow:auto;
+      padding: 10px;
+      background: rgba(255,255,255,.06);
+      border-radius: 12px;
+      text-align:right;
+    }
+    .row{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding: 8px 8px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      font-size: 14px;
+    }
+    .row:last-child{border-bottom:0}
+    .muted{color: rgba(255,255,255,.7)}
+    .small{
+      font-size:12px;
+      color: rgba(255,255,255,.70);
+      margin-top: 8px;
+      text-align:right;
+      line-height:1.7;
+    }
+    .footer{
+      margin-top: 10px;
+      color: rgba(255,255,255,.65);
+      font-size: 13px;
+    }
   </style>
 
   <!-- Firebase compat -->
@@ -208,12 +242,10 @@
     <h1>سباق الإمام الجواد عليه السلام</h1>
     <p class="sub">مسابقة تفاعلية — إشراف لجنة منابر النور بالجفر</p>
 
-    <div id="waitingMessage" class="waiting">
-      ⏳ بانتظار بدء السباق من المنظم<br/>
-      🚦 استعدوا
-    </div>
+    <div id="banner" class="banner">⏳ بانتظار بدء الكويز من المنظم</div>
 
     <div class="card">
+
       <!-- PLAYER UI -->
       <div id="playerUI">
         <input id="playerName" placeholder="اكتب اسمك الثلاثي فقط" autocomplete="off" />
@@ -223,92 +255,57 @@
           <button id="joinBtn">تسجيل</button>
         </div>
 
-        <div class="timer" id="timer">00:00</div>
+        <div class="timerRow">
+          <div class="pill" id="phasePill">الحالة: انتظار</div>
+          <div class="pill" id="qPill">السؤال: -</div>
+        </div>
 
-        <!-- Question box for player -->
-        <div id="playerQuestionBox" class="qBox" style="display:none;">
+        <p class="bigTimer" id="countdown">00</p>
+
+        <div id="questionBox" class="qBox" style="display:none;">
           <div class="qTitle" id="qText"></div>
           <div class="options" id="qOptions"></div>
-          <div class="btns" style="justify-content:flex-start;">
-            <button id="submitAnswerBtn" class="secondary">إرسال الإجابة</button>
+          <div class="btns" style="justify-content:center;">
+            <button id="submitBtn" class="secondary">إرسال الإجابة</button>
           </div>
-          <div id="answerStatus" class="statusWarn" style="display:none;"></div>
+          <div id="playerStatus" class="status warn"></div>
         </div>
       </div>
 
       <!-- ADMIN UI -->
       <div id="adminUI" style="display:none;">
         <div class="btns">
-          <button id="adminStartBtn">▶️ بدء السباق</button>
-          <button class="secondary" id="adminStopBtn">⏸️ إيقاف / متابعة</button>
-          <button class="danger" id="adminResetBtn">♻️ تصفير</button>
+          <button id="adminStartQuiz">▶️ ابدأ الكويز (10 أسئلة)</button>
+          <button id="adminResetQuiz" class="danger">♻️ تصفير كل شيء</button>
         </div>
 
-        <div class="timer" id="adminTimer">00:00</div>
-
-        <div class="adminBox">
-          <div class="adminTitle">
-            <h3>المتسابقون</h3>
-            <div class="pill" id="countPill">0 متسابق</div>
-          </div>
-          <div class="list" id="playersList"></div>
-          <div class="small">
-            ✅ الأسماء تُسحب لايف من Firestore.
-          </div>
+        <div class="timerRow">
+          <div class="pill" id="adminPhase">الحالة: -</div>
+          <div class="pill" id="adminQ">السؤال: -</div>
+          <div class="pill" id="adminPlayersCount">0 متسابق</div>
         </div>
 
-        <div class="adminBox">
-          <div class="adminTitle">
-            <h3>الأسئلة</h3>
-            <div class="pill" id="qCountPill">0 سؤال</div>
+        <p class="bigTimer" id="adminCountdown">00</p>
+
+        <div class="adminGrid">
+          <div class="adminBox">
+            <div class="adminTitle">
+              <h3>المتسابقون</h3>
+              <div class="pill" id="playersPill">0</div>
+            </div>
+            <div class="list" id="playersList"></div>
+            <div class="small">✅ التسجيل من الجوال يظهر هنا لايف.</div>
           </div>
 
-          <div class="small">
-            طريقة التشغيل: اكتب سؤال + 4 خيارات + اختر الإجابة الصحيحة ثم <b>حفظ السؤال</b> → بعدها اختره من القائمة واضغط <b>نشر السؤال</b>.
-          </div>
-
-          <textarea id="newQText" placeholder="اكتب نص السؤال هنا..."></textarea>
-
-          <input id="optA" placeholder="الخيار A" />
-          <input id="optB" placeholder="الخيار B" />
-          <input id="optC" placeholder="الخيار C" />
-          <input id="optD" placeholder="الخيار D" />
-
-          <select id="correctOpt">
-            <option value="0">الإجابة الصحيحة: A</option>
-            <option value="1">الإجابة الصحيحة: B</option>
-            <option value="2">الإجابة الصحيحة: C</option>
-            <option value="3">الإجابة الصحيحة: D</option>
-          </select>
-
-          <div class="btns" style="justify-content:flex-start;">
-            <button id="saveQuestionBtn">💾 حفظ السؤال</button>
-            <button id="clearQuestionBtn" class="secondary">مسح الحقول</button>
-          </div>
-
-          <div style="height:12px;"></div>
-
-          <div class="small"><b>اختيار سؤال للنشر:</b></div>
-          <select id="questionPicker" style="text-align:right;"></select>
-
-          <div class="btns" style="justify-content:flex-start;">
-            <button id="publishQuestionBtn">📣 نشر السؤال للمتسابقين</button>
-            <button id="clearPublishedBtn" class="secondary">إخفاء السؤال</button>
-          </div>
-
-          <div class="small">
-            ✅ عند نشر السؤال: يظهر فورًا لكل المتسابقين حتى لو جوالاتهم مفتوحة.
-          </div>
-        </div>
-
-        <div class="adminBox">
-          <div class="adminTitle">
-            <h3>إجابات السؤال الحالي</h3>
-            <div class="pill" id="ansCountPill">0 إجابة</div>
-          </div>
-          <div class="list" id="answersList"></div>
-          <div class="small">
-            ✅ يتم حفظ الإجابات في: <b>races/current/answers</b>
+          <div class="adminBox">
+            <div class="adminTitle">
+              <h3>الترتيب (الأصح ثم الأسرع)</h3>
+              <div class="pill" id="rankPill">0</div>
+            </div>
+            <div class="list" id="rankList"></div>
+            <div class="small">
+              ✅ الترتيب = عدد الإجابات الصحيحة DESC ثم مجموع أزمنة الإجابات الصحيحة ASC.
+            </div>
           </div>
         </div>
       </div>
@@ -319,7 +316,14 @@
 
 <script>
 /* =========================
-   Firebase Config (جاهز)
+   0) إعدادات الكويز
+   ========================= */
+const TOTAL_QUESTIONS = 10;          // عدد الأسئلة
+const QUESTION_DURATION_SEC = 20;    // مدة كل سؤال (عدّلها مثلًا 15 أو 25)
+const BREAK_DURATION_SEC = 3;        // فاصل بسيط بين الأسئلة
+
+/* =========================
+   1) Firebase Config (جاهز)
    ========================= */
 firebase.initializeApp({
   apiKey: "AIzaSyCXRjGFao0aRxTU1zPnM80-I7NW5YP-yBM",
@@ -333,61 +337,55 @@ firebase.initializeApp({
 const db = firebase.firestore();
 
 /* =========================
-   إعدادات السباق
+   2) مراجع Firestore
    ========================= */
 const RACE_ID = "current";
 const raceRef = db.collection("races").doc(RACE_ID);
 const playersRef = db.collection("players");
-const questionsRef = db.collection("questions"); // جميع الأسئلة
-const answersRef = raceRef.collection("answers"); // إجابات السؤال الحالي
-
-const qs = new URLSearchParams(location.search);
-const isAdmin = qs.get("admin") === "1";
+const questionsRef = db.collection("questions");      // لازم فيها 10 أسئلة بحقل order
+const responsesRef = raceRef.collection("responses"); // كل الإجابات هنا
 
 /* =========================
-   عناصر الواجهة
+   3) تحديد Admin/Player
    ========================= */
-const waitingMessage = document.getElementById("waitingMessage");
+const isAdmin = new URLSearchParams(location.search).get("admin") === "1";
+
+/* =========================
+   4) عناصر الواجهة
+   ========================= */
+const banner = document.getElementById("banner");
 
 const playerUI = document.getElementById("playerUI");
 const adminUI  = document.getElementById("adminUI");
 
 const playerName = document.getElementById("playerName");
 const joinBtn = document.getElementById("joinBtn");
-const timerEl = document.getElementById("timer");
 
-const adminStartBtn = document.getElementById("adminStartBtn");
-const adminStopBtn  = document.getElementById("adminStopBtn");
-const adminResetBtn = document.getElementById("adminResetBtn");
-const adminTimerEl = document.getElementById("adminTimer");
+const phasePill = document.getElementById("phasePill");
+const qPill = document.getElementById("qPill");
+const countdown = document.getElementById("countdown");
 
-const playersList = document.getElementById("playersList");
-const countPill = document.getElementById("countPill");
-
-const playerQuestionBox = document.getElementById("playerQuestionBox");
+const questionBox = document.getElementById("questionBox");
 const qText = document.getElementById("qText");
 const qOptions = document.getElementById("qOptions");
-const submitAnswerBtn = document.getElementById("submitAnswerBtn");
-const answerStatus = document.getElementById("answerStatus");
+const submitBtn = document.getElementById("submitBtn");
+const playerStatus = document.getElementById("playerStatus");
 
-const newQText = document.getElementById("newQText");
-const optA = document.getElementById("optA");
-const optB = document.getElementById("optB");
-const optC = document.getElementById("optC");
-const optD = document.getElementById("optD");
-const correctOpt = document.getElementById("correctOpt");
-const saveQuestionBtn = document.getElementById("saveQuestionBtn");
-const clearQuestionBtn = document.getElementById("clearQuestionBtn");
-const questionPicker = document.getElementById("questionPicker");
-const publishQuestionBtn = document.getElementById("publishQuestionBtn");
-const clearPublishedBtn = document.getElementById("clearPublishedBtn");
-const qCountPill = document.getElementById("qCountPill");
+const adminStartQuiz = document.getElementById("adminStartQuiz");
+const adminResetQuiz = document.getElementById("adminResetQuiz");
+const adminPhase = document.getElementById("adminPhase");
+const adminQ = document.getElementById("adminQ");
+const adminPlayersCount = document.getElementById("adminPlayersCount");
+const adminCountdown = document.getElementById("adminCountdown");
 
-const answersList = document.getElementById("answersList");
-const ansCountPill = document.getElementById("ansCountPill");
+const playersList = document.getElementById("playersList");
+const playersPill = document.getElementById("playersPill");
+
+const rankList = document.getElementById("rankList");
+const rankPill = document.getElementById("rankPill");
 
 /* =========================
-   وضع الواجهة (Admin/Player)
+   5) وضع الواجهة
    ========================= */
 if(isAdmin){
   playerUI.style.display = "none";
@@ -398,37 +396,7 @@ if(isAdmin){
 }
 
 /* =========================
-   مؤقت محلي
-   ========================= */
-let tickInterval = null;
-
-function fmt(ms){
-  const total = Math.max(0, Math.floor(ms/1000));
-  const m = String(Math.floor(total/60)).padStart(2,"0");
-  const s = String(total%60).padStart(2,"0");
-  return `${m}:${s}`;
-}
-
-function stopTick(){
-  if(tickInterval){ clearInterval(tickInterval); tickInterval = null; }
-}
-
-function startTick(startAtMs, paused){
-  stopTick();
-  const update = () => {
-    if(paused) return;
-    const now = Date.now();
-    const diff = now - startAtMs;
-    const t = fmt(diff);
-    timerEl.textContent = t;
-    adminTimerEl.textContent = t;
-  };
-  update();
-  tickInterval = setInterval(update, 250);
-}
-
-/* =========================
-   حفظ هوية اللاعب محلياً
+   6) حفظ اللاعب محلياً
    ========================= */
 function getLocalPlayer(){
   return {
@@ -441,8 +409,9 @@ function setLocalPlayer(name, id){
   localStorage.setItem("jr_playerId", id);
 }
 (function restorePlayer(){
+  if(isAdmin) return;
   const p = getLocalPlayer();
-  if(!isAdmin && p.name){
+  if(p.name){
     playerName.value = p.name;
     playerName.disabled = true;
     joinBtn.disabled = true;
@@ -450,7 +419,7 @@ function setLocalPlayer(name, id){
 })();
 
 /* =========================
-   تسجيل المتسابق
+   7) تسجيل المتسابق
    ========================= */
 async function joinRace(){
   const name = (playerName.value || "").trim();
@@ -461,7 +430,7 @@ async function joinRace(){
 
   joinBtn.disabled = true;
 
-  // منع تكرار نفس الاسم لنفس السباق
+  // منع تكرار نفس الاسم في نفس السباق
   const exists = await playersRef
     .where("raceId","==",RACE_ID)
     .where("name","==",name)
@@ -469,7 +438,6 @@ async function joinRace(){
     .get();
 
   if(!exists.empty){
-    // نستخدم أول وثيقة كـ playerId
     const first = exists.docs[0];
     setLocalPlayer(name, first.id);
     alert("هذا الاسم مسجل مسبقًا ✅");
@@ -486,152 +454,46 @@ async function joinRace(){
 
   setLocalPlayer(name, docRef.id);
 
-  alert("تم التسجيل ✅ انتظر نشر الأسئلة/بدء السباق من المنظم");
-  joinBtn.disabled = true;
+  alert("تم التسجيل ✅ انتظر بدء الكويز");
   playerName.disabled = true;
+  joinBtn.disabled = true;
 }
-
 joinBtn?.addEventListener("click", joinRace);
 playerName?.addEventListener("keypress", (e)=>{ if(e.key==="Enter") joinRace(); });
 
 /* =========================
-   لوحة المتحكم: عرض الأسماء لايف
+   8) Helper: تنسيق الثواني
    ========================= */
-if(isAdmin){
-  playersRef
-    .where("raceId","==",RACE_ID)
-    .orderBy("joinedAt","asc")
-    .onSnapshot((snap)=>{
-      const arr = [];
-      snap.forEach(doc => arr.push({id: doc.id, ...doc.data()}));
-      countPill.textContent = `${arr.length} متسابق`;
-
-      playersList.innerHTML = arr.length ? "" : `<div class="muted">لا يوجد متسابقين مسجلين بعد…</div>`;
-      arr.forEach((p, idx)=>{
-        const joined = p.joinedAt?.toDate ? p.joinedAt.toDate() : null;
-        const time = joined ? joined.toLocaleTimeString("ar-SA") : "--:--";
-        const div = document.createElement("div");
-        div.className = "row";
-        div.innerHTML = `<div>${idx+1}) ${p.name}</div><div class="muted">${time}</div>`;
-        playersList.appendChild(div);
-      });
-    });
+function two(n){ return String(Math.max(0, Math.floor(n))).padStart(2,"0"); }
+function setCountdown(sec){
+  const v = two(sec);
+  countdown.textContent = v;
+  adminCountdown.textContent = v;
 }
 
 /* =========================
-   نظام الأسئلة (Admin)
+   9) تحميل سؤال حسب order
    ========================= */
-function clearQuestionForm(){
-  newQText.value = "";
-  optA.value = "";
-  optB.value = "";
-  optC.value = "";
-  optD.value = "";
-  correctOpt.value = "0";
-}
-
-if(isAdmin){
-  clearQuestionBtn.addEventListener("click", clearQuestionForm);
-
-  saveQuestionBtn.addEventListener("click", async ()=>{
-    const text = (newQText.value || "").trim();
-    const a = (optA.value || "").trim();
-    const b = (optB.value || "").trim();
-    const c = (optC.value || "").trim();
-    const d = (optD.value || "").trim();
-    const correctIndex = Number(correctOpt.value);
-
-    if(!text || !a || !b || !c || !d){
-      alert("اكمل نص السؤال + الأربع خيارات");
-      return;
-    }
-
-    await questionsRef.add({
-      text,
-      options: [a,b,c,d],
-      correctIndex, // 0..3
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    alert("تم حفظ السؤال ✅");
-    clearQuestionForm();
-  });
-
-  // تحميل قائمة الأسئلة
-  questionsRef.orderBy("createdAt","asc").onSnapshot((snap)=>{
-    const qsArr = [];
-    snap.forEach(d => qsArr.push({ id: d.id, ...d.data() }));
-
-    qCountPill.textContent = `${qsArr.length} سؤال`;
-
-    // تعبئة select
-    questionPicker.innerHTML = "";
-    if(qsArr.length === 0){
-      const opt = document.createElement("option");
-      opt.value = "";
-      opt.textContent = "لا يوجد أسئلة بعد";
-      questionPicker.appendChild(opt);
-      return;
-    }
-
-    qsArr.forEach((q, i)=>{
-      const opt = document.createElement("option");
-      opt.value = q.id;
-      const short = (q.text || "").slice(0, 40);
-      opt.textContent = `${i+1}) ${short}${q.text.length>40 ? "..." : ""}`;
-      questionPicker.appendChild(opt);
-    });
-  });
-
-  publishQuestionBtn.addEventListener("click", async ()=>{
-    const qId = questionPicker.value;
-    if(!qId){
-      alert("اختر سؤال أولاً");
-      return;
-    }
-
-    // نشر السؤال الحالي + تنظيف الإجابات السابقة
-    const batch = db.batch();
-
-    batch.set(raceRef, {
-      activeQuestionId: qId,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-
-    // حذف إجابات القديمة (إن وجدت)
-    const old = await answersRef.get();
-    old.forEach(doc => batch.delete(doc.ref));
-
-    await batch.commit();
-    alert("تم نشر السؤال للمتسابقين ✅");
-  });
-
-  clearPublishedBtn.addEventListener("click", async ()=>{
-    await raceRef.set({
-      activeQuestionId: null,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-
-    // حذف إجابات الحالية
-    const batch = db.batch();
-    const old = await answersRef.get();
-    old.forEach(doc => batch.delete(doc.ref));
-    await batch.commit();
-
-    alert("تم إخفاء السؤال ✅");
-  });
+async function getQuestionByOrder(order){
+  const snap = await questionsRef.where("order","==",order).limit(1).get();
+  if(snap.empty) return null;
+  return { id: snap.docs[0].id, ...snap.docs[0].data() };
 }
 
 /* =========================
-   المتسابق: عرض السؤال + إرسال الإجابة
+   10) Player: عرض السؤال
    ========================= */
-let currentActiveQuestionId = null;
-let selectedAnswerIndex = null;
+let selectedIndex = null;
+let currentOrder = null;
+let currentQId = null;
+let currentStartMs = null;
 
-function renderQuestion(q){
+function renderQuestion(q, order){
+  currentQId = q.id;
+  currentOrder = order;
   qText.textContent = q.text || "";
   qOptions.innerHTML = "";
-  selectedAnswerIndex = null;
+  selectedIndex = null;
 
   (q.options || []).forEach((txt, idx)=>{
     const label = document.createElement("label");
@@ -641,175 +503,381 @@ function renderQuestion(q){
       <span>${txt}</span>
     `;
     label.addEventListener("click", ()=>{
-      selectedAnswerIndex = idx;
-      // تأكيد radio
+      selectedIndex = idx;
       const radio = label.querySelector("input");
       if(radio) radio.checked = true;
     });
     qOptions.appendChild(label);
   });
 
-  answerStatus.style.display = "none";
-  playerQuestionBox.style.display = "block";
+  playerStatus.style.display = "none";
+  questionBox.style.display = "block";
 }
 
+function hideQuestion(){
+  questionBox.style.display = "none";
+  selectedIndex = null;
+}
+
+/* =========================
+   11) Player: إرسال الإجابة
+   ========================= */
 async function submitAnswer(){
   const p = getLocalPlayer();
   if(!p.name){
     alert("سجل اسمك أولاً");
     return;
   }
-  if(!currentActiveQuestionId){
-    alert("لا يوجد سؤال منشور الآن");
+  if(!currentQId || !currentOrder || !currentStartMs){
+    alert("لا يوجد سؤال نشط الآن");
     return;
   }
-  if(selectedAnswerIndex === null){
+  if(selectedIndex === null){
     alert("اختر إجابة أولاً");
     return;
   }
 
-  submitAnswerBtn.disabled = true;
+  submitBtn.disabled = true;
 
-  // منع تكرار الإجابة: مفتاح = playerId (أو الاسم لو ما توفر)
-  const answerDocId = p.id || p.name;
-  await answersRef.doc(answerDocId).set({
+  const nowMs = Date.now();
+  const timeMs = Math.max(0, nowMs - currentStartMs);
+
+  // حفظ الإجابة (نمنع تكرار نفس اللاعب لنفس السؤال: docId = playerId_order)
+  const docId = `${p.id || p.name}_${currentOrder}`;
+
+  await responsesRef.doc(docId).set({
     playerId: p.id || null,
     playerName: p.name,
-    questionId: currentActiveQuestionId,
-    answerIndex: selectedAnswerIndex,
+    order: currentOrder,
+    questionId: currentQId,
+    answerIndex: selectedIndex,
+    timeMs: timeMs,
     answeredAt: firebase.firestore.FieldValue.serverTimestamp()
   }, { merge: true });
 
-  answerStatus.textContent = "تم إرسال إجابتك ✅";
-  answerStatus.className = "statusOk";
-  answerStatus.style.display = "block";
-  submitAnswerBtn.disabled = false;
+  playerStatus.textContent = "تم إرسال إجابتك ✅";
+  playerStatus.className = "status ok";
+  playerStatus.style.display = "block";
+  submitBtn.disabled = false;
 }
-
-submitAnswerBtn?.addEventListener("click", submitAnswer);
+submitBtn?.addEventListener("click", submitAnswer);
 
 /* =========================
-   حالة السباق + السؤال المنشور (تصل للجميع)
+   12) تشغيل العد التنازلي محلياً حسب endAt
+   ========================= */
+let countdownInterval = null;
+function stopCountdownTick(){
+  if(countdownInterval){ clearInterval(countdownInterval); countdownInterval = null; }
+}
+function startCountdownTick(endAtMs){
+  stopCountdownTick();
+  const tick = ()=>{
+    const left = Math.ceil((endAtMs - Date.now())/1000);
+    setCountdown(left);
+  };
+  tick();
+  countdownInterval = setInterval(tick, 250);
+}
+
+/* =========================
+   13) الاستماع لحالة السباق (يوصل للجميع)
    races/current:
    {
-     status: "waiting|running",
-     startAt: timestamp|null,
-     paused: bool,
-     activeQuestionId: string|null
+     quizStatus: "waiting"|"question"|"break"|"finished",
+     currentOrder: number,
+     questionId: string|null,
+     questionStartAt: timestamp|null,
+     questionEndAt: timestamp|null
    }
    ========================= */
 raceRef.onSnapshot(async (doc)=>{
   if(!doc.exists){
     await raceRef.set({
-      status: "waiting",
-      paused: false,
-      startAt: null,
-      activeQuestionId: null,
+      quizStatus: "waiting",
+      currentOrder: 0,
+      questionId: null,
+      questionStartAt: null,
+      questionEndAt: null,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     return;
   }
 
-  const data = doc.data() || {};
-  const status = data.status || "waiting";
-  const paused = !!data.paused;
+  const d = doc.data() || {};
+  const status = d.quizStatus || "waiting";
+  const order = d.currentOrder || 0;
 
-  // مؤقت
+  const startAtMs = d.questionStartAt?.toDate ? d.questionStartAt.toDate().getTime() : null;
+  const endAtMs = d.questionEndAt?.toDate ? d.questionEndAt.toDate().getTime() : null;
+
+  // تحديث واجهات الحالة
+  const statusLabel =
+    status === "waiting" ? "انتظار" :
+    status === "question" ? "سؤال" :
+    status === "break" ? "انتقال" :
+    status === "finished" ? "انتهى" : status;
+
+  phasePill.textContent = `الحالة: ${statusLabel}`;
+  adminPhase.textContent = `الحالة: ${statusLabel}`;
+
+  qPill.textContent = order ? `السؤال: ${order}/${TOTAL_QUESTIONS}` : "السؤال: -";
+  adminQ.textContent = order ? `السؤال: ${order}/${TOTAL_QUESTIONS}` : "السؤال: -";
+
+  // البانر
   if(status === "waiting"){
-    waitingMessage.style.display = "block";
-    stopTick();
-    timerEl.textContent = "00:00";
-    adminTimerEl.textContent = "00:00";
-  } else if(status === "running"){
-    waitingMessage.style.display = "none";
-    const startAt = data.startAt?.toDate ? data.startAt.toDate().getTime() : Date.now();
-    startTick(startAt, paused);
+    banner.style.display = "block";
+    banner.textContent = "⏳ بانتظار بدء الكويز من المنظم";
+    hideQuestion();
+    stopCountdownTick();
+    setCountdown(0);
+  } else if(status === "break"){
+    banner.style.display = "block";
+    banner.textContent = "⏳ انتظر… انتقال للسؤال التالي";
+    hideQuestion();
+    if(endAtMs) startCountdownTick(endAtMs);
+  } else if(status === "finished"){
+    banner.style.display = "block";
+    banner.textContent = "✅ انتهى الكويز — راجع الترتيب عند المتحكم";
+    hideQuestion();
+    stopCountdownTick();
+    setCountdown(0);
+  } else if(status === "question"){
+    banner.style.display = "none";
+    if(endAtMs) startCountdownTick(endAtMs);
   }
 
-  // السؤال الحالي
-  const activeQ = data.activeQuestionId || null;
-  currentActiveQuestionId = activeQ;
-
+  // Player: عندما يصبح status=question، اجلب السؤال واعرضه
   if(!isAdmin){
-    if(!activeQ){
-      // لا يوجد سؤال منشور
-      playerQuestionBox.style.display = "none";
+    if(status !== "question"){
+      return;
+    }
+    if(!d.questionId || !order || !startAtMs){
       return;
     }
 
-    // جلب السؤال وعرضه
-    const qDoc = await questionsRef.doc(activeQ).get();
+    // خزّن وقت بداية السؤال محلياً لحساب timeMs
+    currentStartMs = startAtMs;
+
+    // جلب السؤال من questions بالـ questionId
+    const qDoc = await questionsRef.doc(d.questionId).get();
     if(!qDoc.exists){
-      playerQuestionBox.style.display = "none";
+      hideQuestion();
       return;
     }
-    renderQuestion(qDoc.data());
+    renderQuestion({ id: qDoc.id, ...qDoc.data() }, order);
+
+    // رسالة إذا اللاعب حاول يجاوب مرتين
+    playerStatus.style.display = "none";
   }
 });
 
 /* =========================
-   أزرار المتحكم (السباق)
+   14) Admin: عرض المتسابقين
    ========================= */
-async function adminStart(){
+if(isAdmin){
+  playersRef.where("raceId","==",RACE_ID).orderBy("joinedAt","asc").onSnapshot((snap)=>{
+    const arr = [];
+    snap.forEach(doc => arr.push({id: doc.id, ...doc.data()}));
+    adminPlayersCount.textContent = `${arr.length} متسابق`;
+    playersPill.textContent = `${arr.length}`;
+
+    playersList.innerHTML = arr.length ? "" : `<div class="muted">لا يوجد متسابقين مسجلين بعد…</div>`;
+    arr.forEach((p, idx)=>{
+      const joined = p.joinedAt?.toDate ? p.joinedAt.toDate() : null;
+      const time = joined ? joined.toLocaleTimeString("ar-SA") : "--:--";
+      const div = document.createElement("div");
+      div.className = "row";
+      div.innerHTML = `<div>${idx+1}) ${p.name}</div><div class="muted">${time}</div>`;
+      playersList.appendChild(div);
+    });
+  });
+}
+
+/* =========================
+   15) Admin: حساب الترتيب لايف من responses
+   ========================= */
+function renderRanking(map){
+  // map: playerName -> { correct, timeCorrectMs, totalAnswered }
+  const arr = Object.values(map);
+
+  // الترتيب: correct desc ثم timeCorrectMs asc
+  arr.sort((a,b)=>{
+    if(b.correct !== a.correct) return b.correct - a.correct;
+    return a.timeCorrectMs - b.timeCorrectMs;
+  });
+
+  rankPill.textContent = `${arr.length}`;
+  rankList.innerHTML = arr.length ? "" : `<div class="muted">لم تبدأ الإجابات بعد…</div>`;
+
+  arr.forEach((p, i)=>{
+    const sec = Math.round(p.timeCorrectMs/1000);
+    const div = document.createElement("div");
+    div.className = "row";
+    div.innerHTML = `
+      <div>${i+1}) ${p.playerName}</div>
+      <div class="muted">صح: <b>${p.correct}</b> — زمن: <b>${sec}s</b></div>
+    `;
+    rankList.appendChild(div);
+  });
+}
+
+if(isAdmin){
+  // نحتاج نعرف الصحيح/الخطأ: نجيب الأسئلة مرة ونحطها في قاموس (order -> correctIndex)
+  let correctByOrder = {};
+  questionsRef.onSnapshot((snap)=>{
+    const map = {};
+    snap.forEach(d=>{
+      const q = d.data();
+      if(typeof q.order === "number" && typeof q.correctIndex === "number"){
+        map[q.order] = q.correctIndex;
+      }
+    });
+    correctByOrder = map;
+  });
+
+  responsesRef.onSnapshot((snap)=>{
+    const agg = {}; // key: playerId or name
+
+    snap.forEach(d=>{
+      const r = d.data();
+      const key = r.playerId || r.playerName || d.id;
+      if(!agg[key]){
+        agg[key] = {
+          playerName: r.playerName || "—",
+          correct: 0,
+          timeCorrectMs: 0,
+          totalAnswered: 0
+        };
+      }
+      agg[key].totalAnswered += 1;
+
+      const correctIndex = correctByOrder[r.order];
+      const isCorrect = (typeof correctIndex === "number") && (r.answerIndex === correctIndex);
+
+      if(isCorrect){
+        agg[key].correct += 1;
+        agg[key].timeCorrectMs += (r.timeMs || 0);
+      }
+    });
+
+    renderRanking(agg);
+  });
+}
+
+/* =========================
+   16) Admin: تشغيل الكويز تلقائياً (10 أسئلة)
+   ========================= */
+async function adminSetState(state){
+  await raceRef.set(state, { merge: true });
+}
+
+// تشغيل سؤال رقم order (يجيب questionId من questions where order)
+async function adminStartQuestion(order){
+  const q = await getQuestionByOrder(order);
+  if(!q){
+    alert(`لا يوجد سؤال رقم ${order} داخل Collection questions (حقل order)`);
+    return false;
+  }
+
+  // ضبط start/end بالـ server timestamp: نستخدم FieldValue.serverTimestamp للبداية
+  // وللنهاية نستخدم حساب محلي + نرسل كـ Timestamp من JS (لازم Date)
+  const startAt = new Date(); // سيُستخدم كسند لاحقاً للأجهزة، ولكن الأفضل serverTimestamp للبداية
+  const endAt = new Date(Date.now() + QUESTION_DURATION_SEC * 1000);
+
   await raceRef.set({
-    status: "running",
-    paused: false,
-    startAt: firebase.firestore.FieldValue.serverTimestamp(),
+    quizStatus: "question",
+    currentOrder: order,
+    questionId: q.id,
+    questionStartAt: firebase.firestore.FieldValue.serverTimestamp(),
+    questionEndAt: firebase.firestore.Timestamp.fromDate(endAt),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  return true;
+}
+
+async function adminStartBreak(nextOrder){
+  const endAt = new Date(Date.now() + BREAK_DURATION_SEC * 1000);
+  await raceRef.set({
+    quizStatus: "break",
+    currentOrder: nextOrder - 1,
+    questionId: null,
+    questionStartAt: null,
+    questionEndAt: firebase.firestore.Timestamp.fromDate(endAt),
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }, { merge: true });
 }
 
-async function adminTogglePause(){
-  const doc = await raceRef.get();
-  const paused = !!doc.data()?.paused;
+async function adminFinish(){
   await raceRef.set({
-    paused: !paused,
+    quizStatus: "finished",
+    questionId: null,
+    questionStartAt: null,
+    questionEndAt: null,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }, { merge: true });
 }
 
-async function adminReset(){
-  // يرجع Waiting ويصفر التايمر للجميع + يخفي السؤال + يمسح إجابات
+async function adminClearAll(){
+  // تصفير السباق + حذف كل responses
   const batch = db.batch();
+
   batch.set(raceRef, {
-    status: "waiting",
-    paused: false,
-    startAt: null,
-    activeQuestionId: null,
+    quizStatus: "waiting",
+    currentOrder: 0,
+    questionId: null,
+    questionStartAt: null,
+    questionEndAt: null,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }, { merge: true });
 
-  const old = await answersRef.get();
-  old.forEach(doc => batch.delete(doc.ref));
+  const resp = await responsesRef.get();
+  resp.forEach(doc => batch.delete(doc.ref));
 
   await batch.commit();
 }
 
-if(isAdmin){
-  adminStartBtn.addEventListener("click", adminStart);
-  adminStopBtn.addEventListener("click", adminTogglePause);
-  adminResetBtn.addEventListener("click", adminReset);
+// “ابدأ الكويز” = يدور تلقائي: سؤال 1 → فاصل → سؤال 2… إلى 10 → finished
+let adminRunning = false;
+
+async function adminRunQuiz(){
+  if(adminRunning) return;
+  adminRunning = true;
+
+  // تأكد من وجود 10 أسئلة
+  const qsSnap = await questionsRef.get();
+  if(qsSnap.size < TOTAL_QUESTIONS){
+    adminRunning = false;
+    alert(`لازم يكون عندك على الأقل ${TOTAL_QUESTIONS} أسئلة داخل Collection questions`);
+    return;
+  }
+
+  // ابدأ من 1
+  for(let order=1; order<=TOTAL_QUESTIONS; order++){
+    // سؤال
+    const ok = await adminStartQuestion(order);
+    if(!ok){ adminRunning = false; return; }
+
+    // انتظر مدة السؤال
+    await new Promise(res => setTimeout(res, QUESTION_DURATION_SEC * 1000));
+
+    // فاصل (إلا بعد آخر سؤال)
+    if(order < TOTAL_QUESTIONS){
+      await adminStartBreak(order+1);
+      await new Promise(res => setTimeout(res, BREAK_DURATION_SEC * 1000));
+    }
+  }
+
+  await adminFinish();
+  adminRunning = false;
 }
 
-/* =========================
-   Admin: عرض إجابات السؤال الحالي لايف
-   ========================= */
 if(isAdmin){
-  answersRef.orderBy("answeredAt","asc").onSnapshot((snap)=>{
-    const arr = [];
-    snap.forEach(doc => arr.push({id: doc.id, ...doc.data()}));
-
-    ansCountPill.textContent = `${arr.length} إجابة`;
-
-    answersList.innerHTML = arr.length ? "" : `<div class="muted">لا توجد إجابات بعد…</div>`;
-    arr.forEach((a, idx)=>{
-      const t = a.answeredAt?.toDate ? a.answeredAt.toDate().toLocaleTimeString("ar-SA") : "--:--";
-      const ansLetter = ["A","B","C","D"][a.answerIndex] ?? "-";
-      const div = document.createElement("div");
-      div.className = "row";
-      div.innerHTML = `<div>${idx+1}) ${a.playerName} — <b>${ansLetter}</b></div><div class="muted">${t}</div>`;
-      answersList.appendChild(div);
-    });
+  adminStartQuiz.addEventListener("click", adminRunQuiz);
+  adminResetQuiz.addEventListener("click", async ()=>{
+    adminRunning = false;
+    await adminClearAll();
+    alert("تم التصفير ✅");
   });
 }
 </script>
