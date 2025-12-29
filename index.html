@@ -1,701 +1,79 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>سباق الإمام الجواد عليه السلام</title>
-
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>سباق الجواد - متسابق</title>
   <style>
-    :root{
-      --bg:#071c1b;
-      --panel:#0e2a28;
-      --panel2:#0b2422;
-      --accent:#f59e0b;
-      --green:#22c55e;
-      --muted:rgba(255,255,255,.7);
-      --danger:#ef4444;
-    }
-    body{
-      margin:0;
-      font-family: Arial, sans-serif;
-      background:var(--bg);
-      color:#fff;
-      min-height:100vh;
-      display:flex;
-      justify-content:center;
-      align-items:flex-start;
-      padding:26px 14px;
-    }
-    .wrap{width:min(920px,100%);text-align:center}
-    h1{margin:10px 0;font-size:40px}
-    .sub{color:var(--muted); margin:0 0 14px}
-    .waiting{
-      border:2px dashed var(--green);
-      border-radius:16px;
-      padding:14px;
-      margin:16px auto 18px;
-      color:var(--green);
-      font-size:18px;
-      background:rgba(34,197,94,.06);
-    }
-    .card{
-      background:rgba(14,42,40,.55);
-      border-radius:22px;
-      padding:18px;
-      margin:auto;
-      box-shadow:0 10px 28px rgba(0,0,0,.25);
-    }
-    .rowFlex{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
-    input{
-      width:min(520px,100%);
-      padding:14px;
-      border-radius:12px;
-      border:0;
-      font-size:18px;
-      text-align:center;
-      outline:none;
-      background:#e8e8e8;
-    }
-    button{
-      padding:12px 18px;
-      border-radius:12px;
-      border:0;
-      font-size:15px;
-      font-weight:bold;
-      cursor:pointer;
-      background:var(--accent);
-      color:#111;
-    }
-    button.secondary{background:#334155;color:#fff}
-    button.danger{background:var(--danger);color:#fff}
-    button:disabled{opacity:.45;cursor:not-allowed}
-    .timer{
-      font-size:68px;
-      margin:14px 0 10px;
-      font-weight:900;
-      letter-spacing:2px;
-    }
-    .miniTimer{
-      font-size:14px;
-      color:var(--muted);
-      margin-bottom:8px;
-    }
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-      margin-top:14px;
-    }
-    @media(max-width:860px){ .grid{grid-template-columns:1fr} }
-    .box{
-      background:rgba(0,0,0,.18);
-      border-radius:16px;
-      padding:14px;
-      text-align:right;
-      min-height:140px;
-    }
-    .box h3{margin:0 0 10px; font-size:16px}
-    .pill{
-      display:inline-block;
-      padding:4px 10px;
-      border-radius:999px;
-      font-size:12px;
-      background:rgba(34,197,94,.14);
-      color:var(--green);
-      border:1px solid rgba(34,197,94,.35);
-      margin-left:8px;
-    }
-    .list{
-      margin-top:10px;
-      border-radius:12px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.12);
-    }
-    .item{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      padding:10px 12px;
-      background:rgba(255,255,255,.04);
-      border-bottom:1px solid rgba(255,255,255,.08);
-      font-size:14px;
-    }
-    .item:last-child{border-bottom:0}
-    .muted{color:var(--muted)}
-    .ok{color:var(--green)}
-    .warn{color:#fbbf24}
-    .qCard{
-      text-align:right;
-      margin-top:12px;
-      background:rgba(0,0,0,.18);
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:16px;
-      padding:14px;
-    }
-    .qTitle{font-size:18px; margin:0 0 10px}
-    .opts{display:grid; grid-template-columns:1fr 1fr; gap:10px}
-    @media(max-width:620px){ .opts{grid-template-columns:1fr} }
-    .optBtn{
-      background:rgba(255,255,255,.08);
-      color:#fff;
-      border:1px solid rgba(255,255,255,.14);
-      text-align:right;
-      padding:12px 12px;
-    }
-    .optBtn:hover{background:rgba(255,255,255,.12)}
-    .optBtn.selected{outline:2px solid var(--accent)}
-    .optBtn.correct{outline:2px solid var(--green)}
-    .optBtn.wrong{outline:2px solid var(--danger)}
-    .footer{
-      margin-top:10px;
-      font-size:13px;
-      color:rgba(255,255,255,.65);
-    }
-    .smallNote{
-      margin-top:10px;
-      font-size:13px;
-      color:rgba(255,255,255,.65);
-      text-align:right;
-    }
+    body{font-family:system-ui,Segoe UI,Tahoma,Arial; margin:20px; line-height:1.7}
+    .card{max-width:520px;margin:auto;border:1px solid #ddd;border-radius:14px;padding:16px}
+    input,button{font-size:16px;padding:10px;border-radius:10px;border:1px solid #ccc;width:100%}
+    button{cursor:pointer}
+    .row{display:flex;gap:10px;align-items:center}
+    .muted{color:#666}
+    .big{font-size:20px;font-weight:700}
+    .ok{color:green}
+    .warn{color:#b45309}
   </style>
-
-  <!-- Firebase compat -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
-
 <body>
-<div class="wrap">
-  <h1>سباق الإمام الجواد عليه السلام</h1>
-  <p class="sub">مسابقة تفاعلية — لجنة منابر النور بالجفر</p>
-
-  <div id="waiting" class="waiting">⏳ بانتظار بدء السباق من المنظم</div>
-
   <div class="card">
-    <!-- PLAYER UI -->
-    <div id="playerUI">
-      <div class="rowFlex">
-        <input id="nameInput" placeholder="اكتب اسمك الثلاثي" />
-        <button id="joinBtn">تسجيل</button>
-      </div>
-      <div class="miniTimer" id="playerStatus" style="margin-top:10px"></div>
-      <div class="timer" id="timer">00:00</div>
+    <div class="big">سباق الجواد — المتسابق</div>
+    <div class="muted">إذا سجلت اسمك، راح يثبت حتى لو سكّرت الصفحة.</div>
+    <hr/>
 
-      <div id="questionArea" class="qCard" style="display:none">
-        <div class="miniTimer" id="qMeta"></div>
-        <h3 class="qTitle" id="qText">—</h3>
-        <div class="opts" id="opts"></div>
-        <div class="rowFlex" style="margin-top:10px">
-          <button id="submitAnswerBtn" class="secondary" disabled>إرسال الإجابة</button>
-        </div>
-        <div class="smallNote" id="answerNote"></div>
+    <div class="row">
+      <div style="flex:1">
+        <div class="muted">اسمك:</div>
+        <div id="playerName" class="big">—</div>
       </div>
+      <button id="logoutBtn" style="width:auto">مسح الاسم</button>
     </div>
 
-    <!-- ADMIN UI -->
-    <div id="adminUI" style="display:none">
-      <div class="rowFlex" style="margin-bottom:6px">
-        <button id="startBtn">▶️ بدء السباق</button>
-        <button id="pauseBtn" class="secondary">⏸️ إيقاف/متابعة</button>
-        <button id="resetBtn" class="danger">♻️ تصفير</button>
-      </div>
+    <hr/>
 
-      <div class="rowFlex" style="margin-bottom:10px">
-        <button id="prevQBtn" class="secondary">⬅ السابق</button>
-        <button id="nextQBtn" class="secondary">التالي ➡</button>
-        <button id="finishBtn" class="danger">🏁 إنهاء</button>
-      </div>
-
-      <div class="timer" id="adminTimer">00:00</div>
-      <div class="miniTimer" id="adminMeta"></div>
-
-      <div class="grid">
-        <div class="box">
-          <h3>المتسابقون <span class="pill" id="playersCount">0</span></h3>
-          <div class="list" id="players"></div>
-        </div>
-
-        <div class="box">
-          <h3>الترتيب (لايف) <span class="pill" id="rankCount">0</span></h3>
-          <div class="list" id="leaderboard"></div>
-          <div class="smallNote">
-            🔥 الترتيب = (عدد الإجابات الصحيحة) ثم (مجموع زمن الإجابة بالمللي ثانية للأجوبة الصحيحة).  
-          </div>
-        </div>
-      </div>
-
-      <div class="footer">نصيحة: افتح رابط المتسابقين في جوال/متصفح آخر للتجربة.</div>
+    <div id="joinBox">
+      <input id="nameInput" placeholder="اكتب اسمك هنا" />
+      <div style="height:10px"></div>
+      <button id="joinBtn">تسجيل</button>
     </div>
+
+    <div style="height:14px"></div>
+    <div id="status" class="warn">بانتظار التسجيل…</div>
+
+    <hr/>
+
+    <div class="muted">السؤال الحالي:</div>
+    <div id="questionText" class="big">بانتظار بدء السباق من المنظم…</div>
+
+    <div style="height:14px"></div>
+    <div id="debug" class="muted"></div>
   </div>
 
-  <div class="footer">«اللهم ارزقنا توفيق الطاعة، وبعد المعصية، وصدق النية» — الإمام الجواد (ع)</div>
-</div>
-
-<script>
-/* ================= Firebase Config ================= */
-firebase.initializeApp({
-  apiKey: "AIzaSyCXRjGFao0aRxTU1zPnM80-I7NW5YP-yBM",
-  authDomain: "jawad-race.firebaseapp.com",
-  projectId: "jawad-race",
-  storageBucket: "jawad-race.firebasestorage.app",
-  messagingSenderId: "677185572718",
-  appId: "1:677185572718:web:91c4674236efce1d6efb7f"
-});
-
-const db = firebase.firestore();
-
-/* ================= References ================= */
-const RACE_ID = "current";
-const raceRef = db.collection("races").doc(RACE_ID);
-const playersRef = db.collection("players");
-const questionsRef = db.collection("questions");
-const answersRef = db.collection("answers");
-
-/* ================= State ================= */
-const isAdmin = new URLSearchParams(location.search).get("admin")==="1";
-let playerId = localStorage.getItem("jawad_playerId") || "";
-let playerName = localStorage.getItem("jawad_playerName") || "";
-let raceState = { status:"waiting", paused:false, startAt:null, activeOrder:1, questionStartAt:null, endedAt:null };
-let currentQuestion = null;
-let hasAnsweredThisQ = false;
-let interval = null;
-
-/* ================= UI ================= */
-const waiting = document.getElementById("waiting");
-const playerUI = document.getElementById("playerUI");
-const adminUI  = document.getElementById("adminUI");
-const timerEl = document.getElementById("timer");
-const adminTimerEl = document.getElementById("adminTimer");
-const playerStatus = document.getElementById("playerStatus");
-const adminMeta = document.getElementById("adminMeta");
-
-const nameInput = document.getElementById("nameInput");
-const joinBtn = document.getElementById("joinBtn");
-
-const questionArea = document.getElementById("questionArea");
-const qMeta = document.getElementById("qMeta");
-const qText = document.getElementById("qText");
-const optsDiv = document.getElementById("opts");
-const submitAnswerBtn = document.getElementById("submitAnswerBtn");
-const answerNote = document.getElementById("answerNote");
-
-const playersDiv = document.getElementById("players");
-const playersCount = document.getElementById("playersCount");
-const leaderboardDiv = document.getElementById("leaderboard");
-const rankCount = document.getElementById("rankCount");
-
-if(isAdmin){
-  playerUI.style.display="none";
-  adminUI.style.display="block";
-}else{
-  // لو عنده اسم محفوظ
-  if(playerName) nameInput.value = playerName;
-}
-
-/* ================= Helpers ================= */
-function fmtMS(ms){
-  ms = Math.max(0, ms|0);
-  const m = String(Math.floor(ms/60000)).padStart(2,"0");
-  const s = String(Math.floor(ms/1000)%60).padStart(2,"0");
-  return `${m}:${s}`;
-}
-
-function startMainTimer(){
-  clearInterval(interval);
-  interval = setInterval(()=>{
-    if(!raceState.startAt){
-      timerEl.textContent = adminTimerEl.textContent = "00:00";
-      return;
-    }
-    const start = raceState.startAt.toDate().getTime();
-    const now = Date.now();
-    const diff = raceState.endedAt ? (raceState.endedAt.toDate().getTime() - start) : (now - start);
-    const shown = raceState.paused ? (raceState.pauseElapsedMs || diff) : diff;
-    timerEl.textContent = adminTimerEl.textContent = fmtMS(shown);
-  }, 200);
-}
-
-async function ensureRaceDoc(){
-  const snap = await raceRef.get();
-  if(!snap.exists){
-    await raceRef.set({
-      status:"waiting",
-      paused:false,
-      startAt:null,
-      activeOrder:1,
-      questionStartAt:null,
-      endedAt:null,
-      pauseAt:null,
-      pauseElapsedMs:0,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  }
-}
-
-/* ================= Player Join ================= */
-joinBtn.onclick = async ()=>{
-  const name = (nameInput.value||"").trim();
-  if(name.length < 5){
-    alert("اكتب الاسم الثلاثي بشكل واضح");
-    return;
-  }
-
-  // لو اللاعب مسجل سابقاً
-  if(playerId){
-    // حدّث اسمه فقط
-    await playersRef.doc(playerId).set({
-      name,
-      raceId:RACE_ID,
-      joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge:true });
-  }else{
-    const doc = await playersRef.add({
-      name,
-      raceId:RACE_ID,
-      joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    playerId = doc.id;
-    localStorage.setItem("jawad_playerId", playerId);
-  }
-
-  playerName = name;
-  localStorage.setItem("jawad_playerName", playerName);
-
-  playerStatus.innerHTML = `✅ تم التسجيل — انتظر بدء السباق`;
-  joinBtn.disabled = true;
-  nameInput.disabled = true;
-};
-
-/* ================= Load question by order ================= */
-async function loadQuestion(order){
-  // سؤال واحد لكل order
-  const qSnap = await questionsRef.where("order","==",order).limit(1).get();
-  if(qSnap.empty){
-    currentQuestion = null;
-    return null;
-  }
-  const doc = qSnap.docs[0];
-  currentQuestion = { id: doc.id, ...doc.data() };
-  return currentQuestion;
-}
-
-/* ================= Render question ================= */
-function renderQuestion(){
-  if(!currentQuestion){
-    questionArea.style.display = "none";
-    return;
-  }
-  questionArea.style.display = "block";
-  answerNote.textContent = "";
-  hasAnsweredThisQ = false;
-  submitAnswerBtn.disabled = true;
-
-  qMeta.textContent = `السؤال ${raceState.activeOrder} / 10`;
-  qText.textContent = currentQuestion.q || "—";
-
-  optsDiv.innerHTML = "";
-  const opts = currentQuestion.options || [];
-  opts.forEach((t, idx)=>{
-    const b = document.createElement("button");
-    b.className = "optBtn";
-    b.type = "button";
-    b.textContent = t;
-    b.onclick = ()=>{
-      if(hasAnsweredThisQ) return;
-      [...optsDiv.querySelectorAll(".optBtn")].forEach(x=>x.classList.remove("selected"));
-      b.classList.add("selected");
-      submitAnswerBtn.dataset.choice = String(idx);
-      submitAnswerBtn.disabled = false;
-    };
-    optsDiv.appendChild(b);
-  });
-}
-
-/* ================= Submit answer ================= */
-submitAnswerBtn.onclick = async ()=>{
-  if(!playerId){
-    alert("سجّل اسمك أولاً ✅");
-    return;
-  }
-  if(!currentQuestion) return;
-
-  const choice = Number(submitAnswerBtn.dataset.choice);
-  if(Number.isNaN(choice)) return;
-
-  const correctIndex = Number(currentQuestion.correctIndex);
-  const isCorrect = choice === correctIndex;
-
-  // زمن الإجابة من بداية السؤال (مللي ثانية)
-  const qStart = raceState.questionStartAt ? raceState.questionStartAt.toDate().getTime() : Date.now();
-  const msFromStart = Math.max(0, Date.now() - qStart);
-
-  // منع تكرار الإجابة لنفس السؤال
-  const ansId = `${playerId}_${raceState.activeOrder}`;
-  await answersRef.doc(ansId).set({
-    raceId: RACE_ID,
-    playerId,
-    playerName,
-    order: raceState.activeOrder,
-    questionId: currentQuestion.id,
-    selectedIndex: choice,
-    correctIndex,
-    isCorrect,
-    msFromStart,
-    answeredAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge:true });
-
-  hasAnsweredThisQ = true;
-  submitAnswerBtn.disabled = true;
-
-  // تلوين الخيارات
-  const btns = [...optsDiv.querySelectorAll(".optBtn")];
-  btns.forEach((b, idx)=>{
-    b.classList.remove("selected");
-    if(idx === correctIndex) b.classList.add("correct");
-    if(idx === choice && !isCorrect) b.classList.add("wrong");
-  });
-
-  answerNote.innerHTML = isCorrect
-    ? `✅ إجابة صحيحة — زمنك: <b>${(msFromStart/1000).toFixed(2)}s</b>`
-    : `❌ إجابة غير صحيحة — زمنك: <b>${(msFromStart/1000).toFixed(2)}s</b>`;
-};
-
-/* ================= Live: race state ================= */
-raceRef.onSnapshot(async snap=>{
-  if(!snap.exists) return;
-  raceState = { ...raceState, ...snap.data() };
-
-  // UI waiting
-  if(raceState.status === "waiting"){
-    waiting.style.display = "block";
-    playerStatus.innerHTML = playerId ? `✅ تم التسجيل — انتظر بدء السباق` : `اكتب اسمك ثم اضغط تسجيل`;
-    questionArea.style.display = "none";
-  }
-
-  if(raceState.status === "running"){
-    waiting.style.display = "none";
-    playerStatus.innerHTML = playerId ? `🟢 السباق شغّال — أجب بسرعة ودقة` : `سجّل اسمك ثم ابدأ`;
-  }
-
-  if(raceState.status === "finished"){
-    waiting.style.display = "block";
-    waiting.textContent = "🏁 انتهت المسابقة — شوف الترتيب";
-    playerStatus.innerHTML = "انتهت المسابقة ✅";
-  }
-
-  // Timer
-  startMainTimer();
-
-  // Admin meta
-  if(isAdmin){
-    adminMeta.textContent = `السؤال الحالي: ${raceState.activeOrder || 1} / 10 | ${raceState.paused ? "متوقف مؤقتًا ⏸" : "يعمل ✅"}`;
-  }
-
-  // Participants: load question whenever activeOrder changes (and race running)
-  if(!isAdmin){
-    if(raceState.status === "running" && (raceState.activeOrder>=1 && raceState.activeOrder<=10)){
-      await loadQuestion(raceState.activeOrder);
-      renderQuestion();
-
-      // هل أجاب مسبقاً؟
-      if(playerId){
-        const ansId = `${playerId}_${raceState.activeOrder}`;
-        const a = await answersRef.doc(ansId).get();
-        if(a.exists){
-          hasAnsweredThisQ = true;
-          submitAnswerBtn.disabled = true;
-          const d = a.data();
-          const btns = [...optsDiv.querySelectorAll(".optBtn")];
-          btns.forEach((b, idx)=>{
-            if(idx === d.correctIndex) b.classList.add("correct");
-            if(idx === d.selectedIndex && !d.isCorrect) b.classList.add("wrong");
-          });
-          answerNote.innerHTML = d.isCorrect
-            ? `✅ أنت مجاوب صحيح — زمنك: <b>${(d.msFromStart/1000).toFixed(2)}s</b>`
-            : `❌ أنت مجاوب خطأ — زمنك: <b>${(d.msFromStart/1000).toFixed(2)}s</b>`;
-        }
-      }
-    }else{
-      questionArea.style.display = "none";
-    }
-  }
-});
-
-/* ================= Admin controls ================= */
-document.getElementById("startBtn")?.addEventListener("click", async ()=>{
-  await ensureRaceDoc();
-  await raceRef.set({
-    status:"running",
-    paused:false,
-    startAt: firebase.firestore.FieldValue.serverTimestamp(),
-    activeOrder: 1,
-    questionStartAt: firebase.firestore.FieldValue.serverTimestamp(),
-    endedAt: null,
-    pauseAt: null,
-    pauseElapsedMs: 0,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge:true });
-});
-
-document.getElementById("pauseBtn")?.addEventListener("click", async ()=>{
-  const snap = await raceRef.get();
-  const d = snap.data() || {};
-  if(d.status !== "running") return;
-
-  if(!d.paused){
-    // دخول Pause
-    await raceRef.set({
-      paused:true,
-      pauseAt: firebase.firestore.FieldValue.serverTimestamp(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge:true });
-  }else{
-    // خروج Pause وحساب الوقت
-    const pauseAt = d.pauseAt ? d.pauseAt.toDate().getTime() : Date.now();
-    const now = Date.now();
-    const prevElapsed = Number(d.pauseElapsedMs || 0);
-    const newElapsed = prevElapsed + Math.max(0, (now - pauseAt));
-
-    await raceRef.set({
-      paused:false,
-      pauseAt:null,
-      pauseElapsedMs:newElapsed,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge:true });
-  }
-});
-
-document.getElementById("resetBtn")?.addEventListener("click", async ()=>{
-  await raceRef.set({
-    status:"waiting",
-    paused:false,
-    startAt:null,
-    activeOrder:1,
-    questionStartAt:null,
-    endedAt:null,
-    pauseAt:null,
-    pauseElapsedMs:0,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge:true });
-});
-
-document.getElementById("finishBtn")?.addEventListener("click", async ()=>{
-  await raceRef.set({
-    status:"finished",
-    paused:false,
-    endedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge:true });
-});
-
-document.getElementById("nextQBtn")?.addEventListener("click", async ()=>{
-  const next = Math.min(10, (raceState.activeOrder||1)+1);
-  await raceRef.set({
-    activeOrder: next,
-    questionStartAt: firebase.firestore.FieldValue.serverTimestamp(),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge:true });
-});
-
-document.getElementById("prevQBtn")?.addEventListener("click", async ()=>{
-  const prev = Math.max(1, (raceState.activeOrder||1)-1);
-  await raceRef.set({
-    activeOrder: prev,
-    questionStartAt: firebase.firestore.FieldValue.serverTimestamp(),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge:true });
-});
-
-/* ================= Admin: players list ================= */
-if(isAdmin){
-  playersRef.where("raceId","==",RACE_ID)
-    .orderBy("joinedAt","asc")
-    .onSnapshot(snap=>{
-      playersCount.textContent = snap.size;
-      playersDiv.innerHTML = "";
-      snap.forEach((doc, idx)=>{
-        const p = doc.data();
-        const div = document.createElement("div");
-        div.className = "item";
-        div.innerHTML = `<span>${idx+1}) ${p.name || "—"}</span><span class="muted">${doc.id.slice(0,6)}</span>`;
-        playersDiv.appendChild(div);
-      });
-      if(snap.empty){
-        playersDiv.innerHTML = `<div class="item"><span class="muted">لا يوجد متسابقون بعد...</span><span>—</span></div>`;
-      }
-    });
-}
-
-/* ================= Leaderboard (live) ================= */
-function computeLeaderboard(answersDocs){
-  // تجميع حسب playerId
-  const map = new Map();
-  answersDocs.forEach(d=>{
-    const a = d.data();
-    if(a.raceId !== RACE_ID) return;
-    const pid = a.playerId;
-    if(!pid) return;
-    if(!map.has(pid)){
-      map.set(pid, { playerId:pid, name:a.playerName || "—", correct:0, time:0, answered:0 });
-    }
-    const r = map.get(pid);
-    r.name = a.playerName || r.name;
-    r.answered += 1;
-
-    if(a.isCorrect){
-      r.correct += 1;
-      r.time += Number(a.msFromStart || 0);
-    }
-  });
-
-  const arr = [...map.values()];
-  arr.sort((x,y)=>{
-    if(y.correct !== x.correct) return y.correct - x.correct;   // أكثر صح
-    return (x.time - y.time);                                   // الأقل زمنًا
-  });
-  return arr;
-}
-
-answersRef.where("raceId","==",RACE_ID).onSnapshot(snap=>{
-  const arr = computeLeaderboard(snap.docs);
-  rankCount.textContent = arr.length;
-
-  const render = (container)=>{
-    container.innerHTML = "";
-    if(arr.length === 0){
-      container.innerHTML = `<div class="item"><span class="muted">لا توجد نتائج بعد...</span><span>—</span></div>`;
-      return;
-    }
-    arr.forEach((r, i)=>{
-      const div = document.createElement("div");
-      div.className = "item";
-      const seconds = (r.time/1000).toFixed(2);
-      div.innerHTML =
-        `<span>${i+1}) ${r.name}</span>
-         <span class="${r.correct>0?'ok':'muted'}">صح: ${r.correct} | زمن: ${seconds}s</span>`;
-      container.appendChild(div);
-    });
+<script type="module">
+  // =========================
+  // 1) ضع بيانات Firebase هنا فقط (مرة وحدة)
+  // =========================
+  const firebaseConfig = {
+    apiKey: "PUT_YOURS",
+    authDomain: "PUT_YOURS",
+    projectId: "PUT_YOURS",
+    storageBucket: "PUT_YOURS",
+    messagingSenderId: "PUT_YOURS",
+    appId: "PUT_YOURS",
   };
 
-  if(isAdmin) render(leaderboardDiv);
-});
+  // =========================
+  // Firebase imports (CDN)
+  // =========================
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore,
+    doc,
+    collection,
+    addDoc,
+    onSnapshot,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* ================= Boot ================= */
-(async function init(){
-  await ensureRaceDoc();
-
-  // جرّب يقرأ أول سؤال للمتسابق بعد ما يبدأ السباق
-  if(!isAdmin){
-    // لو مسجل سابقاً عطه حالة
-    if(playerId){
-      playerStatus.innerHTML = `✅ تم التسجيل — انتظر بدء السباق`;
-      joinBtn.disabled = true;
-      nameInput.disabled = true;
-    }else{
-      playerStatus.innerHTML = `اكتب اسمك ثم اضغط تسجيل`;
-    }
-  }
-})();
-</script>
-</body>
-</html>
+  const app = initializeApp(fi
