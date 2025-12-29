@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>لوحة تحكم الأدمن – سباق الجواد</title>
+
+  <style>
+    body {
+      font-family: Tahoma, Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    .box {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 0 10px rgba(0,0,0,.1);
+    }
+    h1 { margin-top: 0 }
+    button {
+      width: 100%;
+      padding: 14px;
+      margin: 6px 0;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+    .reset { background:#eee }
+    .start { background:#d1fae5 }
+    .next  { background:#bfdbfe }
+    .finish{ background:#fee2e2 }
+    .status {
+      margin-top: 15px;
+      padding: 10px;
+      background: #f9fafb;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .debug {
+      margin-top: 8px;
+      color: #666;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h1>🎛 لوحة تحكم الأدمن</h1>
+
+  <button class="reset"  id="resetBtn">🔄 تصفير السباق</button>
+  <button class="start"  id="startBtn">▶️ بدء السباق</button>
+  <button class="next"   id="nextBtn">⏭️ السؤال التالي</button>
+  <button class="finish" id="finishBtn">⛔ إنهاء السباق</button>
+
+  <div class="status" id="status">جاهز…</div>
+  <div class="debug"  id="debug"></div>
+</div>
+
+<script type="module">
+  /***********************
+   * 1️⃣ بيانات Firebase
+   * غيّر PUT_YOURS فقط
+   ***********************/
+  const firebaseConfig = {
+    apiKey: "PUT_YOURS",
+    authDomain: "PUT_YOURS",
+    projectId: "PUT_YOURS",
+    storageBucket: "PUT_YOURS",
+    messagingSenderId: "PUT_YOURS",
+    appId: "PUT_YOURS"
+  };
+
+  /***********************
+   * 2️⃣ Firebase Imports
+   ***********************/
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore,
+    doc,
+    collection,
+    getDocs,
+    getDoc,
+    setDoc,
+    updateDoc,
+    query,
+    orderBy,
+    limit,
+    serverTimestamp,
+    onSnapshot
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  // 🔑 مصدر الحقيقة الوحيد
+  const raceRef      = doc(db, "race", "current");
+  const questionsCol = collection(db, "questions");
+
+  const statusEl = document.getElementById("status");
+  const debugEl  = document.getElementById("debug");
+
+  function setStatus(msg) {
+    statusEl.textContent = msg;
+  }
+
+  /***********************
+   * تحميل الأسئلة مرة وحدة
+   ***********************/
+  let questionsCache = null;
+  async function loadQuestions() {
+    if (questionsCache) return questionsCache;
+
+    const q = query(questionsCol, orderBy("order", "asc"), limit(500));
+    const snap = await getDocs(q);
+
+    questionsCache = snap.docs.map(d => ({
+      id: d.id,
+      ...d.data()
+    }));
+
+    if (!questionsCache.length)
+      throw "❌ لا توجد أسئلة في Collection questions";
+
+    return questionsCache;
+  }
+
+  /***********************
+   * أزرار الأدمن
+   ***********************/
+  document.getElementById("resetBtn").onclick = async () => {
+    await setDoc(raceRef, {
+      status: "waiting",
+      activeQuestionId: null,
+      questionIndex: -1,
+      updatedAt: serverTimestamp()
+    }, { merge:true });
+
+    setStatus("✅ تم تصفير السباق");
+  };
+
+  document.getElementById("startBtn").onclick = async () => {
+    await updateDoc(raceRef, {
+      status: "running",
+      updatedAt: serverTimestamp()
+    });
+
+    setStatus("▶️ السباق بدأ – اضغط (التالي)");
+  };
+
+  document.getElementById("nextBtn").onclick = async () => {
+    const qs = await loadQuestions();
+    const snap = await getDoc(raceRef);
+    const race = snap.exists() ? snap.data() : { questionIndex:-1 };
+
+    const nextIndex = (race.questionIndex ?? -1) + 1;
+
+    if (nextIndex >= qs.length) {
+      await updateDoc(raceRef, {
+        status: "finished",
+        activeQuestionId: null,
+        updatedAt: serverTimestamp()
+      });
+      setStatus("🏁 انتهت جميع الأسئلة");
+      return;
+    }
+
+    await updateDoc(raceRef, {
+      status: "running",
+      activeQuestionId: qs[nextIndex].id,
+      questionIndex: nextIndex,
+      updatedAt: serverTimestamp()
+    });
+
+    setStatus(`⏭️ تم إطلاق السؤال رقم ${nextIndex + 1}`);
+  };
+
+  document.getElementById("finishBtn").onclick = async () => {
+    await updateDoc(raceRef, {
+      status: "finished",
+      activeQuestionId: null,
+      updatedAt: serverTimestamp()
+    });
+
+    setStatus("⛔ تم إنهاء السباق");
+  };
+
+  /***********************
+   * Debug حي
+   ***********************/
+  onSnapshot(raceRef, (snap) => {
+    if (!snap.exists()) {
+      debugEl.textContent = "⚠️ وثيقة race/current غير موجودة";
+      return;
+    }
+    const r = snap.data();
+    debugEl.textContent =
+      `status=${r.status} | activeQuestionId=${r.activeQuestionId ?? "null"} | index=${r.questionIndex ?? "-"}`;
+  });
+</script>
+
+</body>
+</html>
