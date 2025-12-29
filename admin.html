@@ -6,54 +6,62 @@
   <title>سباق الجواد — الأدمن</title>
   <style>
     body{font-family:system-ui,Segoe UI,Tahoma,Arial;background:#f6f7fb;margin:0;padding:22px}
-    .wrap{max-width:720px;margin:auto}
+    .wrap{max-width:760px;margin:auto}
     .card{background:#fff;border:1px solid #e6e8ef;border-radius:16px;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,.05)}
     h1{margin:0 0 6px 0;font-size:26px}
     .sub{color:#666;margin-bottom:14px}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     button{padding:14px;border-radius:12px;border:1px solid #d7dbe6;font-size:16px;cursor:pointer}
+    button:disabled{opacity:.6;cursor:not-allowed}
     .btn-reset{background:#f3f4f6}
     .btn-start{background:#dcfce7}
     .btn-next{background:#dbeafe;grid-column:1 / -1}
     .btn-finish{background:#fee2e2;grid-column:1 / -1}
-    .status{margin-top:12px;padding:10px;border-radius:12px;background:#f8fafc;border:1px dashed #e5e7eb}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;color:#444}
-    .ok{color:#16a34a;font-weight:700}
-    .warn{color:#b45309;font-weight:700}
-    .err{color:#dc2626;font-weight:700}
+    .status{margin-top:12px;padding:12px;border-radius:12px;background:#f8fafc;border:1px dashed #e5e7eb}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;color:#444;white-space:pre-wrap}
+    .ok{color:#16a34a;font-weight:800}
+    .warn{color:#b45309;font-weight:800}
+    .err{color:#dc2626;font-weight:800}
+    .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
     a{color:#2563eb;text-decoration:none}
+    .pill{display:inline-block;padding:6px 12px;border-radius:999px;background:#f3f4f6;font-size:12px}
   </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card">
-    <h1>🎛 لوحة تحكم الأدمن</h1>
-    <div class="sub">التشغيل الصحيح: <b>تصفير</b> → <b>بدء</b> → <b>السؤال التالي</b>. (تم توحيد المسار على <span class="mono">race/current</span>)</div>
+    <div class="row">
+      <div>
+        <h1>🎛 لوحة تحكم الأدمن</h1>
+        <div class="sub">التشغيل الصحيح: <b>تصفير</b> → <b>بدء</b> → <b>السؤال التالي</b>. (المسار: <span class="mono">race/current</span>)</div>
+      </div>
+      <a class="pill" href="./?v=999" target="_blank">فتح صفحة المتسابق</a>
+    </div>
 
     <div class="grid">
-      <button class="btn-reset" id="resetBtn">🔄 تصفير السباق</button>
-      <button class="btn-start" id="startBtn">▶️ بدء السباق</button>
-      <button class="btn-next" id="nextBtn">⏭️ السؤال التالي</button>
-      <button class="btn-finish" id="finishBtn">⛔ إنهاء السباق</button>
+      <button type="button" class="btn-reset" id="resetBtn">🔄 تصفير السباق</button>
+      <button type="button" class="btn-start" id="startBtn">▶️ بدء السباق</button>
+      <button type="button" class="btn-next"  id="nextBtn">⏭️ السؤال التالي</button>
+      <button type="button" class="btn-finish" id="finishBtn">⛔ إنهاء السباق</button>
     </div>
 
     <div class="status">
       <div id="msg" class="warn">جاهز…</div>
       <div id="dbg" class="mono"></div>
-      <div style="margin-top:8px" class="mono">رابط المتسابق: <a href="./?v=1" target="_blank">فتح المتسابق</a></div>
+      <div id="err" class="mono err" style="margin-top:8px"></div>
     </div>
   </div>
 </div>
 
 <script type="module">
-  // ✅ نفس firebaseConfig بالضبط في index.html
+  // ✅ تم تثبيت firebaseConfig كما أرسلته (لا تعدّل شيء)
   const firebaseConfig = {
-  apiKey: "AIzaSyCXRjGFao0aRxTU1zPnM80-I7NW5YP-yBM",
-  authDomain: "jawad-race.firebaseapp.com",
-  projectId: "jawad-race",
-  storageBucket: "jawad-race.firebasestorage.app",
-  messagingSenderId: "677185572718",
-  appId: "1:677185572718:web:91c4674236efce1d6efb7f"
+    apiKey: "AIzaSyCXRjGFao0aRxTU1zPnM80-I7NW5YP-yBM",
+    authDomain: "jawad-race.firebaseapp.com",
+    projectId: "jawad-race",
+    storageBucket: "jawad-race.firebasestorage.app",
+    messagingSenderId: "677185572718",
+    appId: "1:677185572718:web:91c4674236efce1d6efb7f"
   };
 
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -65,44 +73,41 @@
   const app = initializeApp(firebaseConfig);
   const db  = getFirestore(app);
 
-  // ✅ مصدر الحقيقة الوحيد
   const raceRef = doc(db, "race", "current");
   const questionsCol = collection(db, "questions");
 
-  const msg = document.getElementById("msg");
-  const dbg = document.getElementById("dbg");
+  const msgEl = document.getElementById("msg");
+  const dbgEl = document.getElementById("dbg");
+  const errEl = document.getElementById("err");
 
-  const say = (text, cls="warn") => { msg.className = cls; msg.textContent = text; };
+  const say = (t, cls="warn") => { msgEl.className = cls; msgEl.textContent = t; };
+  const setErr = (t="") => { errEl.textContent = t; };
 
-  // ✅ تحميل الأسئلة بدون الاعتماد على order:
-  // نحاول order، وإذا ما نفع نرجع لـ createdAt، وإذا ما نفع نجيب أي 500 بدون ترتيب.
+  // تحميل الأسئلة بدون الاعتماد على order
   let questionsCache = null;
-
   async function loadQuestionsSmart(){
     if (questionsCache) return questionsCache;
 
-    // 1) جرّب order
+    // 1) order
     try{
-      const q1 = query(questionsCol, orderBy("order","asc"), limit(500));
-      const s1 = await getDocs(q1);
-      const arr1 = s1.docs.map(d => ({id:d.id, ...d.data()}));
-      if (arr1.length){ questionsCache = arr1; return arr1; }
+      const s1 = await getDocs(query(questionsCol, orderBy("order","asc"), limit(500)));
+      const a1 = s1.docs.map(d=>({id:d.id, ...d.data()}));
+      if (a1.length){ questionsCache = a1; return a1; }
     }catch(_){}
 
-    // 2) جرّب createdAt
+    // 2) createdAt
     try{
-      const q2 = query(questionsCol, orderBy("createdAt","asc"), limit(500));
-      const s2 = await getDocs(q2);
-      const arr2 = s2.docs.map(d => ({id:d.id, ...d.data()}));
-      if (arr2.length){ questionsCache = arr2; return arr2; }
+      const s2 = await getDocs(query(questionsCol, orderBy("createdAt","asc"), limit(500)));
+      const a2 = s2.docs.map(d=>({id:d.id, ...d.data()}));
+      if (a2.length){ questionsCache = a2; return a2; }
     }catch(_){}
 
     // 3) بدون ترتيب
     const s3 = await getDocs(query(questionsCol, limit(500)));
-    const arr3 = s3.docs.map(d => ({id:d.id, ...d.data()}));
-    if (!arr3.length) throw new Error("لا يوجد أسئلة داخل questions");
-    questionsCache = arr3;
-    return arr3;
+    const a3 = s3.docs.map(d=>({id:d.id, ...d.data()}));
+    if (!a3.length) throw new Error("لا يوجد أسئلة داخل questions");
+    questionsCache = a3;
+    return a3;
   }
 
   async function resetRace(){
@@ -122,7 +127,6 @@
     const qs = await loadQuestionsSmart();
     const rSnap = await getDoc(raceRef);
     const r = rSnap.exists() ? rSnap.data() : { questionIndex: -1 };
-
     const nextIndex = (r.questionIndex ?? -1) + 1;
 
     if (nextIndex >= qs.length){
@@ -147,39 +151,43 @@
 
   async function finishRace(){
     await updateDoc(raceRef, { status:"finished", activeQuestionId:null, updatedAt: serverTimestamp() });
-    say("⛔ تم إنهاء السباق", "ok");
   }
 
+  // أزرار
   document.getElementById("resetBtn").onclick = async () => {
-    try{ await resetRace(); say("✅ تم تصفير السباق", "ok"); }
-    catch(e){ say("خطأ Reset: "+(e?.message||e),"err"); }
+    setErr("");
+    try { await resetRace(); say("✅ تم تصفير السباق", "ok"); }
+    catch(e){ say("❌ فشل التصفير", "err"); setErr(e?.message || String(e)); }
   };
 
   document.getElementById("startBtn").onclick = async () => {
-    try{ await startRace(); say("▶️ بدأ السباق — اضغط (السؤال التالي)", "ok"); }
-    catch(e){ say("خطأ Start: "+(e?.message||e),"err"); }
+    setErr("");
+    try { await startRace(); say("▶️ بدأ السباق — اضغط (السؤال التالي)", "ok"); }
+    catch(e){ say("❌ فشل البدء", "err"); setErr(e?.message || String(e)); }
   };
 
   document.getElementById("nextBtn").onclick = async () => {
-    try{ await nextQuestion(); }
-    catch(e){ say("خطأ Next: "+(e?.message||e),"err"); }
+    setErr("");
+    try { await nextQuestion(); }
+    catch(e){ say("❌ فشل السؤال التالي", "err"); setErr(e?.message || String(e)); }
   };
 
   document.getElementById("finishBtn").onclick = async () => {
-    try{ await finishRace(); }
-    catch(e){ say("خطأ Finish: "+(e?.message||e),"err"); }
+    setErr("");
+    try { await finishRace(); say("⛔ تم إنهاء السباق", "ok"); }
+    catch(e){ say("❌ فشل الإنهاء", "err"); setErr(e?.message || String(e)); }
   };
 
   // Debug حي
   onSnapshot(raceRef, (snap)=>{
-    if(!snap.exists()){
-      dbg.textContent = "race/current غير موجود — اضغط (تصفير السباق)";
+    if (!snap.exists()){
+      dbgEl.textContent = "race/current غير موجود — اضغط (تصفير السباق)";
       return;
     }
     const r = snap.data();
-    dbg.textContent = `status=${r.status||"-"} | activeQuestionId=${r.activeQuestionId ?? "null"} | index=${r.questionIndex ?? "-"}`;
+    dbgEl.textContent = `status=${r.status||"-"} | activeQuestionId=${r.activeQuestionId ?? "null"} | index=${r.questionIndex ?? "-"}`;
   }, (e)=>{
-    dbg.textContent = "Listener error: " + (e?.message||e);
+    dbgEl.textContent = "Listener error: " + (e?.message || String(e));
   });
 
 </script>
