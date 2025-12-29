@@ -3,69 +3,43 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>سباق الجواد - المتسابق</title>
+  <title>سباق الجواد - أدمن</title>
   <style>
-    body{font-family:system-ui,Segoe UI,Tahoma,Arial;margin:18px;line-height:1.7}
-    .wrap{max-width:720px;margin:auto}
-    .card{border:1px solid #ddd;border-radius:14px;background:#fff;padding:16px;margin-bottom:12px}
-    input,button{font-size:16px;padding:10px;border-radius:10px;border:1px solid #ccc;width:100%}
-    button{cursor:pointer}
-    .row{display:flex;gap:10px;align-items:center}
+    body{font-family:system-ui,Segoe UI,Tahoma,Arial;margin:20px;line-height:1.7}
+    .card{max-width:560px;margin:auto;border:1px solid #ddd;border-radius:14px;padding:16px}
+    button{font-size:16px;padding:12px;border-radius:10px;border:1px solid #ccc;cursor:pointer;width:100%}
+    .row{display:flex;gap:10px}
     .muted{color:#666}
-    .big{font-size:20px;font-weight:800}
-    .ok{color:#16a34a}
+    .big{font-size:20px;font-weight:700}
+    .ok{color:green}
     .warn{color:#b45309}
-    .err{color:#dc2626}
-    .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#f3f4f6;font-size:12px}
-    ul{margin:8px 0 0 0;padding:0 18px}
+    .danger{color:#b91c1c}
   </style>
 </head>
 <body>
-<div class="wrap">
-
   <div class="card">
-    <div class="row" style="justify-content:space-between">
-      <div class="big">سباق الجواد — المتسابق</div>
-      <a class="pill" href="./admin.html" target="_blank">فتح الأدمن</a>
+    <div class="big">🎛 لوحة تحكم الأدمن</div>
+    <div class="muted">التشغيل الصحيح: تصفير → بدء السباق → السؤال التالي</div>
+    <hr/>
+
+    <div class="row">
+      <button id="resetBtn">تصفير السباق</button>
+      <button id="startBtn">بدء السباق</button>
     </div>
-    <div class="muted">هذه الصفحة تعرض لك الأخطاء على الشاشة بدل ما تضيع وقتك.</div>
-  </div>
 
-  <div class="card">
-    <div class="muted">اسمك:</div>
-    <div id="playerName" class="big">—</div>
     <div style="height:10px"></div>
-    <div id="joinBox">
-      <input id="nameInput" placeholder="اكتب اسمك" />
-      <div style="height:10px"></div>
-      <button id="joinBtn">تسجيل</button>
-    </div>
+    <button id="nextBtn">السؤال التالي ⏭️</button>
+
     <div style="height:10px"></div>
-    <button id="clearBtn">مسح الاسم</button>
+    <button id="finishBtn" class="danger">إنهاء السباق</button>
 
-    <div style="height:12px"></div>
-    <div id="status" class="warn">بانتظار التسجيل…</div>
-    <div id="diag" class="muted" style="margin-top:8px"></div>
-    <div id="err" class="err" style="margin-top:8px"></div>
+    <hr/>
+    <div id="status" class="warn">جاهز…</div>
+    <div id="debug" class="muted"></div>
   </div>
-
-  <div class="card">
-    <div class="muted">حالة السباق:</div>
-    <div id="raceState" class="big">—</div>
-    <div style="height:10px"></div>
-    <div class="muted">السؤال الحالي:</div>
-    <div id="questionText" class="big">—</div>
-  </div>
-
-  <div class="card">
-    <div class="muted">آخر 20 اسم مسجل (للتأكد أن التسجيل شغال):</div>
-    <ul id="playersList"></ul>
-  </div>
-
-</div>
 
 <script type="module">
-  // ✅ ضع بيانات Firebase هنا (لازم تكون نفسها في admin.html)
+  // ✅ ضع بيانات Firebase هنا (نفسها في index.html)
   const firebaseConfig = {
     apiKey: "PUT_YOURS",
     authDomain: "PUT_YOURS",
@@ -77,110 +51,106 @@
 
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
-    getFirestore, doc, collection, addDoc, onSnapshot, serverTimestamp,
-    query, orderBy, limit
+    getFirestore,
+    doc,
+    collection,
+    getDocs,
+    getDoc,
+    setDoc,
+    updateDoc,
+    query,
+    orderBy,
+    limit,
+    serverTimestamp,
+    onSnapshot
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // ✅ نفس مسار الأدمن
   const raceRef = doc(db, "race", "current");
   const questionsCol = collection(db, "questions");
-  const playersCol = collection(db, "players");
 
-  // UI
-  const playerNameEl = document.getElementById("playerName");
-  const joinBox = document.getElementById("joinBox");
-  const nameInput = document.getElementById("nameInput");
-  const joinBtn = document.getElementById("joinBtn");
-  const clearBtn = document.getElementById("clearBtn");
   const statusEl = document.getElementById("status");
-  const diagEl = document.getElementById("diag");
-  const errEl = document.getElementById("err");
-  const raceStateEl = document.getElementById("raceState");
-  const qEl = document.getElementById("questionText");
-  const playersList = document.getElementById("playersList");
-
-  const LS_NAME = "jr_player_name";
-  const getName = () => localStorage.getItem(LS_NAME) || "";
-  const setName = (v) => localStorage.setItem(LS_NAME, v);
-  const clearName = () => localStorage.removeItem(LS_NAME);
+  const debugEl  = document.getElementById("debug");
 
   function setStatus(msg, cls="warn"){ statusEl.className = cls; statusEl.textContent = msg; }
-  function setErr(msg=""){ errEl.textContent = msg; }
 
-  function renderName(){
-    const n = getName();
-    playerNameEl.textContent = n || "—";
-    joinBox.style.display = n ? "none" : "block";
+  let questionsCache = null;
+  async function loadQuestionsOnce(){
+    if (questionsCache) return questionsCache;
+
+    // إذا ما عندك حقل order في questions: غيّره إلى createdAt
+    const q = query(questionsCol, orderBy("order", "asc"), limit(500));
+    const snap = await getDocs(q);
+
+    questionsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!questionsCache.length) throw new Error("لا يوجد أسئلة داخل questions");
+
+    return questionsCache;
   }
-  renderName();
 
-  clearBtn.onclick = () => { clearName(); renderName(); setStatus("بانتظار التسجيل…","warn"); };
+  document.getElementById("resetBtn").onclick = async () => {
+    await setDoc(raceRef, {
+      status: "waiting",
+      activeQuestionId: null,
+      questionIndex: -1,
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
 
-  joinBtn.onclick = async () => {
-    setErr("");
-    const clean = (nameInput.value || "").trim();
-    if (!clean) return setErr("اكتب الاسم أولًا");
-    try{
-      await addDoc(playersCol, { name: clean, createdAt: serverTimestamp() });
-      setName(clean);
-      renderName();
-      setStatus("تم التسجيل ✅","ok");
-    }catch(e){
-      setStatus("فشل التسجيل ❌","err");
-      setErr("سبب الفشل غالبًا صلاحيات Firestore Rules أو firebaseConfig غلط. التفاصيل: " + (e?.message || e));
-    }
+    setStatus("✅ تم تصفير السباق", "ok");
   };
 
-  // 1) راقب السباق
-  let unsubQ = null;
-  const safeUnsub = (fn)=>{ try{ fn && fn(); }catch(_){} };
+  document.getElementById("startBtn").onclick = async () => {
+    await updateDoc(raceRef, { status: "running", updatedAt: serverTimestamp() });
+    setStatus("▶️ السباق بدأ — اضغط (السؤال التالي)", "ok");
+  };
 
-  onSnapshot(raceRef, (snap)=>{
-    setErr("");
-    if(!snap.exists()){
-      raceStateEl.textContent = "race/current غير موجود";
-      qEl.textContent = "اذهب للأدمن واضغط (تصفير السباق) مرة.";
+  document.getElementById("nextBtn").onclick = async () => {
+    const qs = await loadQuestionsOnce();
+    const raceSnap = await getDoc(raceRef);
+    const race = raceSnap.exists() ? raceSnap.data() : { questionIndex: -1 };
+
+    const nextIndex = (race.questionIndex ?? -1) + 1;
+
+    if (nextIndex >= qs.length) {
+      await updateDoc(raceRef, {
+        status: "finished",
+        activeQuestionId: null,
+        questionIndex: qs.length - 1,
+        updatedAt: serverTimestamp(),
+      });
+      setStatus("🏁 انتهت الأسئلة", "ok");
+      return;
+    }
+
+    await updateDoc(raceRef, {
+      status: "running",
+      activeQuestionId: qs[nextIndex].id,
+      questionIndex: nextIndex,
+      updatedAt: serverTimestamp(),
+    });
+
+    setStatus(`⏭️ تم إطلاق السؤال رقم ${nextIndex + 1}`, "ok");
+  };
+
+  document.getElementById("finishBtn").onclick = async () => {
+    await updateDoc(raceRef, {
+      status: "finished",
+      activeQuestionId: null,
+      updatedAt: serverTimestamp(),
+    });
+    setStatus("⛔ تم إنهاء السباق", "ok");
+  };
+
+  onSnapshot(raceRef, (snap) => {
+    if (!snap.exists()) {
+      debugEl.textContent = "وثيقة race/current غير موجودة (اضغط تصفير)";
       return;
     }
     const r = snap.data();
-    raceStateEl.textContent = `status=${r.status || "-"} | index=${r.questionIndex ?? "-"}`;
-
-    diagEl.textContent = `projectId=${firebaseConfig.projectId} | activeQuestionId=${r.activeQuestionId ?? "null"}`;
-
-    const qid = r.activeQuestionId || null;
-    if(!qid){
-      safeUnsub(unsubQ); unsubQ=null;
-      qEl.textContent = "بانتظار سؤال… (من الأدمن اضغط: بدء السباق ثم السؤال التالي)";
-      return;
-    }
-
-    safeUnsub(unsubQ);
-    unsubQ = onSnapshot(doc(questionsCol, qid), (qs)=>{
-      if(!qs.exists()){ qEl.textContent = "السؤال غير موجود داخل questions"; return; }
-      const q = qs.data();
-      qEl.textContent = q.text || q.question || "سؤال بدون نص";
-    });
-  }, (e)=>{
-    setStatus("فشل قراءة السباق ❌","err");
-    setErr("سبب الفشل غالبًا Rules أو config. التفاصيل: " + (e?.message || e));
+    debugEl.textContent = `status=${r.status || "-"} | activeQuestionId=${r.activeQuestionId ?? "null"} | index=${r.questionIndex ?? "-"}`;
   });
-
-  // 2) اعرض آخر المسجلين (لتأكيد أن الأسماء تنكتب)
-  const pq = query(playersCol, orderBy("createdAt","desc"), limit(20));
-  onSnapshot(pq, (snap)=>{
-    playersList.innerHTML = "";
-    snap.forEach(d=>{
-      const li = document.createElement("li");
-      li.textContent = d.data().name || "(بدون اسم)";
-      playersList.appendChild(li);
-    });
-  }, (e)=>{
-    setErr("ملاحظة: لا أستطيع قراءة players. هذا يعني Rules مانعة القراءة. " + (e?.message || e));
-  });
-
 </script>
 </body>
 </html>
