@@ -27,20 +27,9 @@
       align-items:flex-start;
       padding: 30px 14px;
     }
-    .wrap{
-      width: min(760px, 100%);
-      text-align:center;
-    }
-    h1{
-      margin: 12px 0 6px;
-      font-size: clamp(28px, 4vw, 44px);
-      letter-spacing:.3px;
-    }
-    .sub{
-      margin:0 0 18px;
-      color: var(--muted);
-      font-size: 16px;
-    }
+    .wrap{ width: min(760px, 100%); text-align:center; }
+    h1{ margin: 12px 0 6px; font-size: clamp(28px, 4vw, 44px); letter-spacing:.3px; }
+    .sub{ margin:0 0 18px; color: var(--muted); font-size: 16px; }
 
     .waiting{
       border: 2px dashed var(--dash);
@@ -73,11 +62,7 @@
       margin-top: 6px;
     }
 
-    .hint{
-      margin: 10px 0 14px;
-      color: var(--muted);
-      font-size: 14px;
-    }
+    .hint{ margin: 10px 0 14px; color: var(--muted); font-size: 14px; }
 
     .btns{
       display:flex;
@@ -103,14 +88,8 @@
       border: 1px solid rgba(255,255,255,.18);
       font-weight:600;
     }
-    button.danger{
-      background:#ef4444;
-      color:#fff;
-    }
-    button:disabled{
-      opacity:.55;
-      cursor:not-allowed;
-    }
+    button.danger{ background:#ef4444; color:#fff; }
+    button:disabled{ opacity:.55; cursor:not-allowed; }
 
     .timer{
       font-size: clamp(52px, 8vw, 78px);
@@ -118,13 +97,8 @@
       font-weight: 800;
       letter-spacing: 1px;
     }
-    .footer{
-      margin-top: 10px;
-      color: rgba(255,255,255,.65);
-      font-size: 13px;
-    }
+    .footer{ margin-top: 10px; color: rgba(255,255,255,.65); font-size: 13px; }
 
-    /* Admin panel */
     .adminBox{
       margin-top: 18px;
       text-align:right;
@@ -140,10 +114,7 @@
       gap:10px;
       margin-bottom:10px;
     }
-    .adminTitle h3{
-      margin:0;
-      font-size: 18px;
-    }
+    .adminTitle h3{ margin:0; font-size: 18px; }
     .pill{
       padding:6px 10px;
       border-radius: 999px;
@@ -171,7 +142,6 @@
     }
     .row:last-child{border-bottom:0}
     .muted{color: rgba(255,255,255,.7)}
-    .ok{color: var(--green); font-weight:700}
     .small{
       font-size:12px;
       color: rgba(255,255,255,.65);
@@ -179,9 +149,21 @@
       text-align:right;
       line-height:1.6;
     }
+    .err{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      background: rgba(239,68,68,.12);
+      border: 1px solid rgba(239,68,68,.35);
+      color:#fecaca;
+      text-align:right;
+      font-size:13px;
+      line-height:1.6;
+      display:none;
+    }
   </style>
 
-  <!-- Firebase (Compat for simple use in one HTML file) -->
+  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
@@ -224,6 +206,7 @@
           </div>
 
           <div class="list" id="playersList"></div>
+          <div class="err" id="errBox"></div>
 
           <div class="small">
             ✅ الأسماء تُسحب لايف من Firestore.<br/>
@@ -238,7 +221,7 @@
 
 <script>
 /* =========================
-   1) ضع Firebase Config هنا
+   1) ضع Firebase Config هنا (ضروري)
    ========================= */
 const firebaseConfig = {
   apiKey: "PUT_YOUR_API_KEY_HERE",
@@ -253,9 +236,9 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 /* =========================
-   2) إعدادات السباق الثابتة
+   2) إعدادات السباق
    ========================= */
-const RACE_ID = "current"; // كل الأجهزة لازم تكون على نفس السباق
+const RACE_ID = "current";
 const raceRef = db.collection("races").doc(RACE_ID);
 const playersRef = db.collection("players");
 
@@ -281,6 +264,7 @@ const adminTimerEl = document.getElementById("adminTimer");
 
 const playersList = document.getElementById("playersList");
 const countPill = document.getElementById("countPill");
+const errBox = document.getElementById("errBox");
 
 /* =========================
    4) مؤقت محلي
@@ -293,17 +277,14 @@ function fmt(ms){
   const s = String(total%60).padStart(2,"0");
   return `${m}:${s}`;
 }
-
 function stopTick(){
   if(tickInterval){ clearInterval(tickInterval); tickInterval = null; }
 }
-
 function startTick(startAtMs, paused){
   stopTick();
   const update = () => {
     if(paused) return;
-    const now = Date.now();
-    const diff = now - startAtMs;
+    const diff = Date.now() - startAtMs;
     const t = fmt(diff);
     timerEl.textContent = t;
     adminTimerEl.textContent = t;
@@ -324,8 +305,17 @@ if(isAdmin){
 }
 
 /* =========================
-   6) تسجيل المتسابق
+   6) تسجيل المتسابق (بدون Queries عشان ما نحتاج Index)
    ========================= */
+function safeId(str){
+  // تحويل الاسم إلى ID آمن (بدون مسافات/رموز)
+  return (str || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^\u0600-\u06FFa-z0-9_]/g, "");
+}
+
 async function joinRace(){
   const name = (playerName.value || "").trim();
   if(name.length < 5){
@@ -335,47 +325,58 @@ async function joinRace(){
 
   joinBtn.disabled = true;
 
-  // نمنع تكرار نفس الاسم في نفس السباق بشكل بسيط:
-  const exists = await playersRef
-    .where("raceId","==",RACE_ID)
-    .where("name","==",name)
-    .limit(1)
-    .get();
+  const docId = `${RACE_ID}_${safeId(name)}`;
+  const ref = playersRef.doc(docId);
+  const snap = await ref.get();
 
-  if(!exists.empty){
+  if(snap.exists){
     alert("هذا الاسم مسجل مسبقًا ✅");
-    joinBtn.disabled = false;
+    joinBtn.disabled = true;
+    playerName.disabled = true;
     return;
   }
 
-  await playersRef.add({
-    name,
-    raceId: RACE_ID,
-    joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
+  try{
+    await ref.set({
+      name,
+      raceId: RACE_ID,
+      joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
 
-  alert("تم التسجيل ✅ انتظر بدء السباق من المنظم");
-  joinBtn.disabled = true;
-  playerName.disabled = true;
+    alert("تم التسجيل ✅ انتظر بدء السباق من المنظم");
+    joinBtn.disabled = true;
+    playerName.disabled = true;
+  }catch(e){
+    console.error(e);
+    alert("تعذر التسجيل. غالبًا Rules في Firestore تمنع الكتابة.");
+    joinBtn.disabled = false;
+  }
 }
 
 joinBtn?.addEventListener("click", joinRace);
 playerName?.addEventListener("keypress", (e)=>{ if(e.key==="Enter") joinRace(); });
 
 /* =========================
-   7) لوحة المتحكم: عرض الأسماء لايف
+   7) لوحة المتحكم: عرض الأسماء لايف (بدون orderBy لتفادي Index)
    ========================= */
 if(isAdmin){
   playersRef
     .where("raceId","==",RACE_ID)
-    .orderBy("joinedAt","asc")
     .onSnapshot((snap)=>{
+      errBox.style.display = "none";
       const arr = [];
       snap.forEach(doc => arr.push({id: doc.id, ...doc.data()}));
 
-      countPill.textContent = `${arr.length} متسابق`;
+      // ترتيب محلي حسب الوقت (لو joinedAt موجود)
+      arr.sort((a,b)=>{
+        const ta = a.joinedAt?.toDate ? a.joinedAt.toDate().getTime() : 0;
+        const tb = b.joinedAt?.toDate ? b.joinedAt.toDate().getTime() : 0;
+        return ta - tb;
+      });
 
+      countPill.textContent = `${arr.length} متسابق`;
       playersList.innerHTML = arr.length ? "" : `<div class="muted">لا يوجد متسابقين مسجلين بعد…</div>`;
+
       arr.forEach((p, idx)=>{
         const joined = p.joinedAt?.toDate ? p.joinedAt.toDate() : null;
         const time = joined ? joined.toLocaleTimeString("ar-SA") : "--:--";
@@ -384,17 +385,18 @@ if(isAdmin){
         div.innerHTML = `<div>${idx+1}) ${p.name}</div><div class="muted">${time}</div>`;
         playersList.appendChild(div);
       });
+    }, (err)=>{
+      console.error(err);
+      errBox.style.display = "block";
+      errBox.innerHTML = `⚠️ خطأ في قراءة Firestore: <br><span class="muted">${err.message}</span><br>✅ افحص Rules أو إعدادات Firebase config.`;
     });
 }
 
 /* =========================
    8) حالة السباق (تصل للكل)
-   races/current:
-   { status: "waiting|running", startAt: timestamp, paused: bool }
    ========================= */
 raceRef.onSnapshot(async (doc)=>{
   if(!doc.exists){
-    // إنشاء مستند السباق لأول مرة
     await raceRef.set({
       status: "waiting",
       paused: false,
@@ -426,7 +428,6 @@ raceRef.onSnapshot(async (doc)=>{
    9) أزرار المتحكم
    ========================= */
 async function adminStart(){
-  // يبدأ السباق للجميع بنفس اللحظة (ServerTimestamp)
   await raceRef.set({
     status: "running",
     paused: false,
@@ -445,7 +446,6 @@ async function adminTogglePause(){
 }
 
 async function adminReset(){
-  // يرجع Waiting ويصفر التايمر للجميع
   await raceRef.set({
     status: "waiting",
     paused: false,
