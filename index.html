@@ -14,6 +14,7 @@
       --text:#ffffff;
       --muted:rgba(255,255,255,.7);
       --dash:rgba(34,197,94,.55);
+      --danger:#ef4444;
     }
     *{box-sizing:border-box}
     body{
@@ -27,21 +28,9 @@
       align-items:flex-start;
       padding: 30px 14px;
     }
-    .wrap{
-      width: min(760px, 100%);
-      text-align:center;
-    }
-    h1{
-      margin: 12px 0 6px;
-      font-size: note;
-      font-size: clamp(28px, 4vw, 44px);
-      letter-spacing:.3px;
-    }
-    .sub{
-      margin:0 0 18px;
-      color: var(--muted);
-      font-size: 16px;
-    }
+    .wrap{ width: min(860px, 100%); text-align:center; }
+    h1{ margin: 12px 0 6px; font-size: clamp(28px, 4vw, 44px); }
+    .sub{ margin:0 0 18px; color: var(--muted); font-size: 16px; }
 
     .waiting{
       border: 2px dashed var(--dash);
@@ -52,10 +41,10 @@
       color: var(--green);
       font-size: clamp(18px, 2.3vw, 24px);
       line-height:1.7;
-      width: min(640px, 100%);
+      width: min(740px, 100%);
     }
     .card{
-      width:min(640px, 100%);
+      width:min(740px, 100%);
       margin: 0 auto;
       background: rgba(14,42,40,.55);
       border-radius: 22px;
@@ -63,22 +52,19 @@
       box-shadow: 0 20px 60px rgba(0,0,0,.25);
     }
 
-    input{
-      width: min(520px, 100%);
-      padding: 14px 14px;
+    input, textarea, select{
+      width: min(640px, 100%);
+      padding: 12px 14px;
       border-radius: 14px;
       border: 0;
       outline: none;
-      font-size: 18px;
-      text-align:center;
-      margin-top: 6px;
+      font-size: 16px;
+      text-align:right;
+      margin-top: 8px;
     }
+    textarea{ min-height: 90px; resize: vertical; }
 
-    .hint{
-      margin: 10px 0 14px;
-      color: var(--muted);
-      font-size: 14px;
-    }
+    .hint{ margin: 10px 0 14px; color: var(--muted); font-size: 14px; }
 
     .btns{
       display:flex;
@@ -105,13 +91,10 @@
       font-weight:600;
     }
     button.danger{
-      background:#ef4444;
+      background: var(--danger);
       color:#fff;
     }
-    button:disabled{
-      opacity:.55;
-      cursor:not-allowed;
-    }
+    button:disabled{ opacity:.55; cursor:not-allowed; }
 
     .timer{
       font-size: clamp(52px, 8vw, 78px);
@@ -119,12 +102,14 @@
       font-weight: 800;
       letter-spacing: 1px;
     }
+
     .footer{
       margin-top: 10px;
       color: rgba(255,255,255,.65);
       font-size: 13px;
     }
 
+    /* Admin */
     .adminBox{
       margin-top: 18px;
       text-align:right;
@@ -140,10 +125,7 @@
       gap:10px;
       margin-bottom:10px;
     }
-    .adminTitle h3{
-      margin:0;
-      font-size: 18px;
-    }
+    .adminTitle h3{ margin:0; font-size: 18px; }
     .pill{
       padding:6px 10px;
       border-radius: 999px;
@@ -169,18 +151,54 @@
       border-bottom: 1px solid rgba(255,255,255,.08);
       font-size: 14px;
     }
-    .row:last-child{border-bottom:0}
-    .muted{color: rgba(255,255,255,.7)}
+    .row:last-child{ border-bottom:0; }
+    .muted{ color: rgba(255,255,255,.7); }
     .small{
       font-size:12px;
       color: rgba(255,255,255,.65);
-      margin-top: 6px;
+      margin-top: 8px;
       text-align:right;
-      line-height:1.6;
+      line-height:1.7;
     }
+
+    /* Question UI */
+    .qBox{
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.12);
+      text-align:right;
+    }
+    .qTitle{
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0 0 10px;
+      line-height:1.7;
+    }
+    .options{
+      display:grid;
+      gap:10px;
+      margin-top: 10px;
+    }
+    .opt{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      cursor:pointer;
+      user-select:none;
+    }
+    .opt input{ width:auto; margin:0; }
+    .opt span{ line-height:1.6; }
+    .statusOk{ color: var(--green); font-weight:800; margin-top:10px; }
+    .statusWarn{ color: #fbbf24; font-weight:800; margin-top:10px; }
   </style>
 
-  <!-- Firebase compat (يناسب سكربت بسيط داخل HTML) -->
+  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
@@ -196,7 +214,7 @@
     </div>
 
     <div class="card">
-      <!-- Player -->
+      <!-- PLAYER UI -->
       <div id="playerUI">
         <input id="playerName" placeholder="اكتب اسمك الثلاثي فقط" autocomplete="off" />
         <div class="hint">اضغط <b>تسجيل</b> بعد كتابة الاسم</div>
@@ -206,12 +224,23 @@
         </div>
 
         <div class="timer" id="timer">00:00</div>
+
+        <!-- Question box for player -->
+        <div id="playerQuestionBox" class="qBox" style="display:none;">
+          <div class="qTitle" id="qText"></div>
+          <div class="options" id="qOptions"></div>
+          <div class="btns" style="justify-content:flex-start;">
+            <button id="submitAnswerBtn" class="secondary">إرسال الإجابة</button>
+          </div>
+          <div id="answerStatus" class="statusWarn" style="display:none;"></div>
+        </div>
       </div>
 
-      <!-- Admin -->
+      <!-- ADMIN UI -->
       <div id="adminUI" style="display:none;">
         <div class="btns">
           <button id="adminStartBtn">▶️ بدء السباق</button>
+          <button class="secondary" id="adminStopBtn">⏸️ إيقاف / متابعة</button>
           <button class="danger" id="adminResetBtn">♻️ تصفير</button>
         </div>
 
@@ -219,15 +248,67 @@
 
         <div class="adminBox">
           <div class="adminTitle">
-            <h3>لوحة المتحكم</h3>
+            <h3>المتسابقون</h3>
             <div class="pill" id="countPill">0 متسابق</div>
           </div>
-
           <div class="list" id="playersList"></div>
+          <div class="small">
+            ✅ الأسماء تُسحب لايف من Firestore.
+          </div>
+        </div>
+
+        <div class="adminBox">
+          <div class="adminTitle">
+            <h3>الأسئلة</h3>
+            <div class="pill" id="qCountPill">0 سؤال</div>
+          </div>
 
           <div class="small">
-            ✅ الأسماء تُسحب لايف من Firestore.<br/>
-            ✅ المتسابق ينتظر بدء السباق من المنظم.
+            طريقة التشغيل: اكتب سؤال + 4 خيارات + اختر الإجابة الصحيحة ثم <b>حفظ السؤال</b> → بعدها اختره من القائمة واضغط <b>نشر السؤال</b>.
+          </div>
+
+          <textarea id="newQText" placeholder="اكتب نص السؤال هنا..."></textarea>
+
+          <input id="optA" placeholder="الخيار A" />
+          <input id="optB" placeholder="الخيار B" />
+          <input id="optC" placeholder="الخيار C" />
+          <input id="optD" placeholder="الخيار D" />
+
+          <select id="correctOpt">
+            <option value="0">الإجابة الصحيحة: A</option>
+            <option value="1">الإجابة الصحيحة: B</option>
+            <option value="2">الإجابة الصحيحة: C</option>
+            <option value="3">الإجابة الصحيحة: D</option>
+          </select>
+
+          <div class="btns" style="justify-content:flex-start;">
+            <button id="saveQuestionBtn">💾 حفظ السؤال</button>
+            <button id="clearQuestionBtn" class="secondary">مسح الحقول</button>
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <div class="small"><b>اختيار سؤال للنشر:</b></div>
+          <select id="questionPicker" style="text-align:right;"></select>
+
+          <div class="btns" style="justify-content:flex-start;">
+            <button id="publishQuestionBtn">📣 نشر السؤال للمتسابقين</button>
+            <button id="clearPublishedBtn" class="secondary">إخفاء السؤال</button>
+          </div>
+
+          <div class="small">
+            ✅ عند نشر السؤال: يظهر فورًا لكل المتسابقين حتى لو جوالاتهم مفتوحة.
+          </div>
+        </div>
+
+        <div class="adminBox">
+          <div class="adminTitle">
+            <h3>إجابات السؤال الحالي</h3>
+            <div class="pill" id="ansCountPill">0 إجابة</div>
+          </div>
+          <div class="list" id="answersList"></div>
+          <div class="small">
+            ✅ يتم حفظ الإجابات في: <b>races/current/answers</b>
           </div>
         </div>
       </div>
@@ -237,193 +318,501 @@
   </div>
 
 <script>
-  // Firebase config (حقك)
-  firebase.initializeApp({
-    apiKey: "AIzaSyCXRjGFao0aRxTU1zPnM80-I7NW5YP-yBM",
-    authDomain: "jawad-race.firebaseapp.com",
-    projectId: "jawad-race",
-    storageBucket: "jawad-race.firebasestorage.app",
-    messagingSenderId: "677185572718",
-    appId: "1:677185572718:web:91c4674236efce1d6efb7f"
-  });
+/* =========================
+   Firebase Config (جاهز)
+   ========================= */
+firebase.initializeApp({
+  apiKey: "AIzaSyCXRjGFao0aRxTU1zPnM80-I7NW5YP-yBM",
+  authDomain: "jawad-race.firebaseapp.com",
+  projectId: "jawad-race",
+  storageBucket: "jawad-race.firebasestorage.app",
+  messagingSenderId: "677185572718",
+  appId: "1:677185572718:web:91c4674236efce1d6efb7f"
+});
 
-  const db = firebase.firestore();
+const db = firebase.firestore();
 
-  const RACE_ID = "current";
-  const raceRef = db.collection("races").doc(RACE_ID);
-  const playersRef = db.collection("players");
+/* =========================
+   إعدادات السباق
+   ========================= */
+const RACE_ID = "current";
+const raceRef = db.collection("races").doc(RACE_ID);
+const playersRef = db.collection("players");
+const questionsRef = db.collection("questions"); // جميع الأسئلة
+const answersRef = raceRef.collection("answers"); // إجابات السؤال الحالي
 
-  const qs = new URLSearchParams(location.search);
-  const isAdmin = qs.get("admin") === "1";
+const qs = new URLSearchParams(location.search);
+const isAdmin = qs.get("admin") === "1";
 
-  const waitingMessage = document.getElementById("waitingMessage");
+/* =========================
+   عناصر الواجهة
+   ========================= */
+const waitingMessage = document.getElementById("waitingMessage");
 
-  const playerUI = document.getElementById("playerUI");
-  const adminUI  = document.getElementById("adminUI");
+const playerUI = document.getElementById("playerUI");
+const adminUI  = document.getElementById("adminUI");
 
-  const playerName = document.getElementById("playerName");
-  const joinBtn = document.getElementById("joinBtn");
-  const timerEl = document.getElementById("timer");
+const playerName = document.getElementById("playerName");
+const joinBtn = document.getElementById("joinBtn");
+const timerEl = document.getElementById("timer");
 
-  const adminStartBtn = document.getElementById("adminStartBtn");
-  const adminResetBtn = document.getElementById("adminResetBtn");
-  const adminTimerEl = document.getElementById("adminTimer");
+const adminStartBtn = document.getElementById("adminStartBtn");
+const adminStopBtn  = document.getElementById("adminStopBtn");
+const adminResetBtn = document.getElementById("adminResetBtn");
+const adminTimerEl = document.getElementById("adminTimer");
 
-  const playersList = document.getElementById("playersList");
-  const countPill = document.getElementById("countPill");
+const playersList = document.getElementById("playersList");
+const countPill = document.getElementById("countPill");
 
-  // UI Mode
-  if(isAdmin){
-    playerUI.style.display = "none";
-    adminUI.style.display  = "block";
-  } else {
-    playerUI.style.display = "block";
-    adminUI.style.display  = "none";
-  }
+const playerQuestionBox = document.getElementById("playerQuestionBox");
+const qText = document.getElementById("qText");
+const qOptions = document.getElementById("qOptions");
+const submitAnswerBtn = document.getElementById("submitAnswerBtn");
+const answerStatus = document.getElementById("answerStatus");
 
-  // Timer (local)
-  let interval = null;
-  function fmt(ms){
-    const total = Math.max(0, Math.floor(ms/1000));
-    const m = String(Math.floor(total/60)).padStart(2,"0");
-    const s = String(total%60).padStart(2,"0");
-    return `${m}:${s}`;
-  }
-  function stopTimer(){
-    if(interval){ clearInterval(interval); interval=null; }
-  }
-  function runTimer(startAtMs){
-    stopTimer();
-    const tick = ()=>{
-      const diff = Date.now() - startAtMs;
-      const t = fmt(diff);
-      timerEl.textContent = t;
-      adminTimerEl.textContent = t;
-    };
-    tick();
-    interval = setInterval(tick, 250);
-  }
+const newQText = document.getElementById("newQText");
+const optA = document.getElementById("optA");
+const optB = document.getElementById("optB");
+const optC = document.getElementById("optC");
+const optD = document.getElementById("optD");
+const correctOpt = document.getElementById("correctOpt");
+const saveQuestionBtn = document.getElementById("saveQuestionBtn");
+const clearQuestionBtn = document.getElementById("clearQuestionBtn");
+const questionPicker = document.getElementById("questionPicker");
+const publishQuestionBtn = document.getElementById("publishQuestionBtn");
+const clearPublishedBtn = document.getElementById("clearPublishedBtn");
+const qCountPill = document.getElementById("qCountPill");
 
-  // Join player
-  async function joinRace(){
-    const name = (playerName.value || "").trim();
-    if(name.length < 5){
-      alert("اكتب الاسم الثلاثي بشكل صحيح");
-      return;
-    }
-    joinBtn.disabled = true;
+const answersList = document.getElementById("answersList");
+const ansCountPill = document.getElementById("ansCountPill");
 
-    // منع تكرار الاسم داخل نفس السباق
-    const exists = await playersRef
-      .where("raceId","==",RACE_ID)
-      .where("name","==",name)
-      .limit(1)
-      .get();
+/* =========================
+   وضع الواجهة (Admin/Player)
+   ========================= */
+if(isAdmin){
+  playerUI.style.display = "none";
+  adminUI.style.display  = "block";
+} else {
+  playerUI.style.display = "block";
+  adminUI.style.display  = "none";
+}
 
-    if(!exists.empty){
-      alert("هذا الاسم مسجل مسبقًا ✅");
-      joinBtn.disabled = false;
-      return;
-    }
+/* =========================
+   مؤقت محلي
+   ========================= */
+let tickInterval = null;
 
-    await playersRef.add({
-      name,
-      raceId: RACE_ID,
-      joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+function fmt(ms){
+  const total = Math.max(0, Math.floor(ms/1000));
+  const m = String(Math.floor(total/60)).padStart(2,"0");
+  const s = String(total%60).padStart(2,"0");
+  return `${m}:${s}`;
+}
 
-    alert("تم التسجيل ✅ انتظر بدء السباق من المنظم");
+function stopTick(){
+  if(tickInterval){ clearInterval(tickInterval); tickInterval = null; }
+}
+
+function startTick(startAtMs, paused){
+  stopTick();
+  const update = () => {
+    if(paused) return;
+    const now = Date.now();
+    const diff = now - startAtMs;
+    const t = fmt(diff);
+    timerEl.textContent = t;
+    adminTimerEl.textContent = t;
+  };
+  update();
+  tickInterval = setInterval(update, 250);
+}
+
+/* =========================
+   حفظ هوية اللاعب محلياً
+   ========================= */
+function getLocalPlayer(){
+  return {
+    name: localStorage.getItem("jr_playerName") || "",
+    id: localStorage.getItem("jr_playerId") || ""
+  };
+}
+function setLocalPlayer(name, id){
+  localStorage.setItem("jr_playerName", name);
+  localStorage.setItem("jr_playerId", id);
+}
+(function restorePlayer(){
+  const p = getLocalPlayer();
+  if(!isAdmin && p.name){
+    playerName.value = p.name;
     playerName.disabled = true;
     joinBtn.disabled = true;
   }
+})();
 
-  joinBtn.addEventListener("click", joinRace);
-  playerName.addEventListener("keypress", (e)=>{ if(e.key==="Enter") joinRace(); });
-
-  // Admin: Live players (بدون orderBy لتفادي index)
-  if(isAdmin){
-    playersRef
-      .where("raceId","==",RACE_ID)
-      .onSnapshot((snap)=>{
-        const arr = [];
-        snap.forEach(doc => arr.push({id: doc.id, ...doc.data()}));
-
-        // ترتيب محلي حسب joinedAt (لو موجود)
-        arr.sort((a,b)=>{
-          const at = a.joinedAt?.seconds || 0;
-          const bt = b.joinedAt?.seconds || 0;
-          return at - bt;
-        });
-
-        countPill.textContent = `${arr.length} متسابق`;
-
-        playersList.innerHTML = arr.length ? "" : `<div class="muted">لا يوجد متسابقين مسجلين بعد…</div>`;
-        arr.forEach((p, idx)=>{
-          const joined = p.joinedAt?.toDate ? p.joinedAt.toDate() : null;
-          const time = joined ? joined.toLocaleTimeString("ar-SA") : "--:--";
-          const div = document.createElement("div");
-          div.className = "row";
-          div.innerHTML = `<div>${idx+1}) ${p.name}</div><div class="muted">${time}</div>`;
-          playersList.appendChild(div);
-        });
-      }, (err)=>{
-        console.error(err);
-        alert("فيه منع من Firestore Rules أو مشكلة صلاحيات. راجع Rules.");
-      });
+/* =========================
+   تسجيل المتسابق
+   ========================= */
+async function joinRace(){
+  const name = (playerName.value || "").trim();
+  if(name.length < 5){
+    alert("اكتب الاسم الثلاثي بشكل صحيح");
+    return;
   }
 
-  // Race state
-  raceRef.onSnapshot(async (doc)=>{
-    if(!doc.exists){
-      await raceRef.set({
-        status: "waiting",
-        startAt: null,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  joinBtn.disabled = true;
+
+  // منع تكرار نفس الاسم لنفس السباق
+  const exists = await playersRef
+    .where("raceId","==",RACE_ID)
+    .where("name","==",name)
+    .limit(1)
+    .get();
+
+  if(!exists.empty){
+    // نستخدم أول وثيقة كـ playerId
+    const first = exists.docs[0];
+    setLocalPlayer(name, first.id);
+    alert("هذا الاسم مسجل مسبقًا ✅");
+    playerName.disabled = true;
+    joinBtn.disabled = true;
+    return;
+  }
+
+  const docRef = await playersRef.add({
+    name,
+    raceId: RACE_ID,
+    joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  setLocalPlayer(name, docRef.id);
+
+  alert("تم التسجيل ✅ انتظر نشر الأسئلة/بدء السباق من المنظم");
+  joinBtn.disabled = true;
+  playerName.disabled = true;
+}
+
+joinBtn?.addEventListener("click", joinRace);
+playerName?.addEventListener("keypress", (e)=>{ if(e.key==="Enter") joinRace(); });
+
+/* =========================
+   لوحة المتحكم: عرض الأسماء لايف
+   ========================= */
+if(isAdmin){
+  playersRef
+    .where("raceId","==",RACE_ID)
+    .orderBy("joinedAt","asc")
+    .onSnapshot((snap)=>{
+      const arr = [];
+      snap.forEach(doc => arr.push({id: doc.id, ...doc.data()}));
+      countPill.textContent = `${arr.length} متسابق`;
+
+      playersList.innerHTML = arr.length ? "" : `<div class="muted">لا يوجد متسابقين مسجلين بعد…</div>`;
+      arr.forEach((p, idx)=>{
+        const joined = p.joinedAt?.toDate ? p.joinedAt.toDate() : null;
+        const time = joined ? joined.toLocaleTimeString("ar-SA") : "--:--";
+        const div = document.createElement("div");
+        div.className = "row";
+        div.innerHTML = `<div>${idx+1}) ${p.name}</div><div class="muted">${time}</div>`;
+        playersList.appendChild(div);
       });
+    });
+}
+
+/* =========================
+   نظام الأسئلة (Admin)
+   ========================= */
+function clearQuestionForm(){
+  newQText.value = "";
+  optA.value = "";
+  optB.value = "";
+  optC.value = "";
+  optD.value = "";
+  correctOpt.value = "0";
+}
+
+if(isAdmin){
+  clearQuestionBtn.addEventListener("click", clearQuestionForm);
+
+  saveQuestionBtn.addEventListener("click", async ()=>{
+    const text = (newQText.value || "").trim();
+    const a = (optA.value || "").trim();
+    const b = (optB.value || "").trim();
+    const c = (optC.value || "").trim();
+    const d = (optD.value || "").trim();
+    const correctIndex = Number(correctOpt.value);
+
+    if(!text || !a || !b || !c || !d){
+      alert("اكمل نص السؤال + الأربع خيارات");
       return;
     }
 
-    const data = doc.data() || {};
-    const status = data.status || "waiting";
+    await questionsRef.add({
+      text,
+      options: [a,b,c,d],
+      correctIndex, // 0..3
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
 
-    if(status === "waiting"){
-      waitingMessage.style.display = "block";
-      stopTimer();
-      timerEl.textContent = "00:00";
-      adminTimerEl.textContent = "00:00";
-    }
-
-    if(status === "running"){
-      waitingMessage.style.display = "none";
-      const startAtMs = data.startAt?.toDate ? data.startAt.toDate().getTime() : Date.now();
-      runTimer(startAtMs);
-    }
-  }, (err)=>{
-    console.error(err);
-    alert("فيه منع من Firestore Rules أو مشكلة صلاحيات. راجع Rules.");
+    alert("تم حفظ السؤال ✅");
+    clearQuestionForm();
   });
 
-  // Admin buttons
-  async function adminStart(){
-    await raceRef.set({
-      status: "running",
-      startAt: firebase.firestore.FieldValue.serverTimestamp(),
+  // تحميل قائمة الأسئلة
+  questionsRef.orderBy("createdAt","asc").onSnapshot((snap)=>{
+    const qsArr = [];
+    snap.forEach(d => qsArr.push({ id: d.id, ...d.data() }));
+
+    qCountPill.textContent = `${qsArr.length} سؤال`;
+
+    // تعبئة select
+    questionPicker.innerHTML = "";
+    if(qsArr.length === 0){
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "لا يوجد أسئلة بعد";
+      questionPicker.appendChild(opt);
+      return;
+    }
+
+    qsArr.forEach((q, i)=>{
+      const opt = document.createElement("option");
+      opt.value = q.id;
+      const short = (q.text || "").slice(0, 40);
+      opt.textContent = `${i+1}) ${short}${q.text.length>40 ? "..." : ""}`;
+      questionPicker.appendChild(opt);
+    });
+  });
+
+  publishQuestionBtn.addEventListener("click", async ()=>{
+    const qId = questionPicker.value;
+    if(!qId){
+      alert("اختر سؤال أولاً");
+      return;
+    }
+
+    // نشر السؤال الحالي + تنظيف الإجابات السابقة
+    const batch = db.batch();
+
+    batch.set(raceRef, {
+      activeQuestionId: qId,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
+
+    // حذف إجابات القديمة (إن وجدت)
+    const old = await answersRef.get();
+    old.forEach(doc => batch.delete(doc.ref));
+
+    await batch.commit();
+    alert("تم نشر السؤال للمتسابقين ✅");
+  });
+
+  clearPublishedBtn.addEventListener("click", async ()=>{
+    await raceRef.set({
+      activeQuestionId: null,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    // حذف إجابات الحالية
+    const batch = db.batch();
+    const old = await answersRef.get();
+    old.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+
+    alert("تم إخفاء السؤال ✅");
+  });
+}
+
+/* =========================
+   المتسابق: عرض السؤال + إرسال الإجابة
+   ========================= */
+let currentActiveQuestionId = null;
+let selectedAnswerIndex = null;
+
+function renderQuestion(q){
+  qText.textContent = q.text || "";
+  qOptions.innerHTML = "";
+  selectedAnswerIndex = null;
+
+  (q.options || []).forEach((txt, idx)=>{
+    const label = document.createElement("label");
+    label.className = "opt";
+    label.innerHTML = `
+      <input type="radio" name="ans" value="${idx}">
+      <span>${txt}</span>
+    `;
+    label.addEventListener("click", ()=>{
+      selectedAnswerIndex = idx;
+      // تأكيد radio
+      const radio = label.querySelector("input");
+      if(radio) radio.checked = true;
+    });
+    qOptions.appendChild(label);
+  });
+
+  answerStatus.style.display = "none";
+  playerQuestionBox.style.display = "block";
+}
+
+async function submitAnswer(){
+  const p = getLocalPlayer();
+  if(!p.name){
+    alert("سجل اسمك أولاً");
+    return;
+  }
+  if(!currentActiveQuestionId){
+    alert("لا يوجد سؤال منشور الآن");
+    return;
+  }
+  if(selectedAnswerIndex === null){
+    alert("اختر إجابة أولاً");
+    return;
   }
 
-  async function adminReset(){
+  submitAnswerBtn.disabled = true;
+
+  // منع تكرار الإجابة: مفتاح = playerId (أو الاسم لو ما توفر)
+  const answerDocId = p.id || p.name;
+  await answersRef.doc(answerDocId).set({
+    playerId: p.id || null,
+    playerName: p.name,
+    questionId: currentActiveQuestionId,
+    answerIndex: selectedAnswerIndex,
+    answeredAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  answerStatus.textContent = "تم إرسال إجابتك ✅";
+  answerStatus.className = "statusOk";
+  answerStatus.style.display = "block";
+  submitAnswerBtn.disabled = false;
+}
+
+submitAnswerBtn?.addEventListener("click", submitAnswer);
+
+/* =========================
+   حالة السباق + السؤال المنشور (تصل للجميع)
+   races/current:
+   {
+     status: "waiting|running",
+     startAt: timestamp|null,
+     paused: bool,
+     activeQuestionId: string|null
+   }
+   ========================= */
+raceRef.onSnapshot(async (doc)=>{
+  if(!doc.exists){
     await raceRef.set({
       status: "waiting",
+      paused: false,
       startAt: null,
+      activeQuestionId: null,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+    });
+    return;
   }
 
-  if(isAdmin){
-    adminStartBtn.addEventListener("click", adminStart);
-    adminResetBtn.addEventListener("click", adminReset);
+  const data = doc.data() || {};
+  const status = data.status || "waiting";
+  const paused = !!data.paused;
+
+  // مؤقت
+  if(status === "waiting"){
+    waitingMessage.style.display = "block";
+    stopTick();
+    timerEl.textContent = "00:00";
+    adminTimerEl.textContent = "00:00";
+  } else if(status === "running"){
+    waitingMessage.style.display = "none";
+    const startAt = data.startAt?.toDate ? data.startAt.toDate().getTime() : Date.now();
+    startTick(startAt, paused);
   }
+
+  // السؤال الحالي
+  const activeQ = data.activeQuestionId || null;
+  currentActiveQuestionId = activeQ;
+
+  if(!isAdmin){
+    if(!activeQ){
+      // لا يوجد سؤال منشور
+      playerQuestionBox.style.display = "none";
+      return;
+    }
+
+    // جلب السؤال وعرضه
+    const qDoc = await questionsRef.doc(activeQ).get();
+    if(!qDoc.exists){
+      playerQuestionBox.style.display = "none";
+      return;
+    }
+    renderQuestion(qDoc.data());
+  }
+});
+
+/* =========================
+   أزرار المتحكم (السباق)
+   ========================= */
+async function adminStart(){
+  await raceRef.set({
+    status: "running",
+    paused: false,
+    startAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+}
+
+async function adminTogglePause(){
+  const doc = await raceRef.get();
+  const paused = !!doc.data()?.paused;
+  await raceRef.set({
+    paused: !paused,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+}
+
+async function adminReset(){
+  // يرجع Waiting ويصفر التايمر للجميع + يخفي السؤال + يمسح إجابات
+  const batch = db.batch();
+  batch.set(raceRef, {
+    status: "waiting",
+    paused: false,
+    startAt: null,
+    activeQuestionId: null,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  const old = await answersRef.get();
+  old.forEach(doc => batch.delete(doc.ref));
+
+  await batch.commit();
+}
+
+if(isAdmin){
+  adminStartBtn.addEventListener("click", adminStart);
+  adminStopBtn.addEventListener("click", adminTogglePause);
+  adminResetBtn.addEventListener("click", adminReset);
+}
+
+/* =========================
+   Admin: عرض إجابات السؤال الحالي لايف
+   ========================= */
+if(isAdmin){
+  answersRef.orderBy("answeredAt","asc").onSnapshot((snap)=>{
+    const arr = [];
+    snap.forEach(doc => arr.push({id: doc.id, ...doc.data()}));
+
+    ansCountPill.textContent = `${arr.length} إجابة`;
+
+    answersList.innerHTML = arr.length ? "" : `<div class="muted">لا توجد إجابات بعد…</div>`;
+    arr.forEach((a, idx)=>{
+      const t = a.answeredAt?.toDate ? a.answeredAt.toDate().toLocaleTimeString("ar-SA") : "--:--";
+      const ansLetter = ["A","B","C","D"][a.answerIndex] ?? "-";
+      const div = document.createElement("div");
+      div.className = "row";
+      div.innerHTML = `<div>${idx+1}) ${a.playerName} — <b>${ansLetter}</b></div><div class="muted">${t}</div>`;
+      answersList.appendChild(div);
+    });
+  });
+}
 </script>
+
 </body>
 </html>
