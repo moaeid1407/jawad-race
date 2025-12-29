@@ -3,57 +3,75 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>سباق الجواد - متسابق</title>
+  <title>سباق الجواد — المتسابق</title>
   <style>
-    body{font-family:system-ui,Segoe UI,Tahoma,Arial; margin:20px; line-height:1.7}
-    .card{max-width:520px;margin:auto;border:1px solid #ddd;border-radius:14px;padding:16px}
-    input,button{font-size:16px;padding:10px;border-radius:10px;border:1px solid #ccc;width:100%}
+    body{font-family:system-ui,Segoe UI,Tahoma,Arial;background:#f6f7fb;margin:0;padding:22px}
+    .wrap{max-width:760px;margin:auto}
+    .card{background:#fff;border:1px solid #e6e8ef;border-radius:16px;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,.05);margin-bottom:12px}
+    h1{margin:0 0 6px 0;font-size:26px}
+    .sub{color:#666;margin-bottom:14px}
+    input,button{width:100%;padding:12px;border-radius:12px;border:1px solid #d7dbe6;font-size:16px}
     button{cursor:pointer}
     .row{display:flex;gap:10px;align-items:center}
+    .pill{display:inline-block;padding:6px 12px;border-radius:999px;background:#f3f4f6;font-size:12px}
+    .big{font-size:20px;font-weight:800}
     .muted{color:#666}
-    .big{font-size:20px;font-weight:700}
-    .ok{color:green}
-    .warn{color:#b45309}
+    .ok{color:#16a34a;font-weight:700}
+    .warn{color:#b45309;font-weight:700}
+    .err{color:#dc2626;font-weight:700}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;color:#444}
+    ul{margin:8px 0 0 0;padding:0 18px}
+    a{color:#2563eb;text-decoration:none}
   </style>
 </head>
 <body>
+<div class="wrap">
   <div class="card">
-    <div class="big">سباق الجواد — المتسابق</div>
-    <div class="muted">إذا سجلت اسمك، راح يثبت حتى لو سكّرت الصفحة.</div>
-    <hr/>
-
-    <div class="row">
-      <div style="flex:1">
-        <div class="muted">اسمك:</div>
-        <div id="playerName" class="big">—</div>
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <h1>🏁 سباق الجواد — المتسابق</h1>
+        <div class="sub">سجّل اسمك وانتظر المنظم يضغط (السؤال التالي).</div>
       </div>
-      <button id="logoutBtn" style="width:auto">مسح الاسم</button>
+      <a class="pill" href="./admin.html?v=1" target="_blank">فتح الأدمن</a>
     </div>
+  </div>
 
-    <hr/>
+  <div class="card">
+    <div class="muted">اسمك:</div>
+    <div id="playerName" class="big">—</div>
+    <div style="height:10px"></div>
 
     <div id="joinBox">
-      <input id="nameInput" placeholder="اكتب اسمك هنا" />
+      <input id="nameInput" placeholder="اكتب اسمك" />
       <div style="height:10px"></div>
       <button id="joinBtn">تسجيل</button>
     </div>
 
-    <div style="height:14px"></div>
+    <div style="height:10px"></div>
+    <button id="clearBtn">مسح الاسم</button>
+
+    <div style="height:12px"></div>
     <div id="status" class="warn">بانتظار التسجيل…</div>
-
-    <hr/>
-
-    <div class="muted">السؤال الحالي:</div>
-    <div id="questionText" class="big">بانتظار بدء السباق من المنظم…</div>
-
-    <div style="height:14px"></div>
-    <div id="debug" class="muted"></div>
+    <div id="dbg" class="mono" style="margin-top:8px"></div>
+    <div id="err" class="err" style="margin-top:8px"></div>
   </div>
 
+  <div class="card">
+    <div class="muted">حالة السباق:</div>
+    <div id="raceState" class="big">—</div>
+    <div style="height:10px"></div>
+    <div class="muted">السؤال الحالي:</div>
+    <div id="questionText" class="big">بانتظار بدء السباق…</div>
+  </div>
+
+  <div class="card">
+    <div class="muted">آخر 20 اسم (للتأكد أن الأسماء تنكتب):</div>
+    <ul id="playersList"></ul>
+  </div>
+</div>
+
 <script type="module">
-  // =========================
-  // 1) ضع بيانات Firebase هنا فقط (مرة وحدة)
-  // =========================
+  // ✅ لازم تكون نفسها في admin.html حرفيًا
   const firebaseConfig = {
     apiKey: "PUT_YOURS",
     authDomain: "PUT_YOURS",
@@ -63,17 +81,116 @@
     appId: "PUT_YOURS",
   };
 
-  // =========================
-  // Firebase imports (CDN)
-  // =========================
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
-    getFirestore,
-    doc,
-    collection,
-    addDoc,
-    onSnapshot,
-    serverTimestamp
+    getFirestore, doc, collection, addDoc, onSnapshot, serverTimestamp,
+    query, orderBy, limit
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  const app = initializeApp(fi
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  const raceRef = doc(db, "race", "current");
+  const questionsCol = collection(db, "questions");
+  const playersCol = collection(db, "players");
+
+  // UI
+  const playerNameEl = document.getElementById("playerName");
+  const joinBox = document.getElementById("joinBox");
+  const nameInput = document.getElementById("nameInput");
+  const joinBtn = document.getElementById("joinBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const statusEl = document.getElementById("status");
+  const dbgEl = document.getElementById("dbg");
+  const errEl = document.getElementById("err");
+  const raceStateEl = document.getElementById("raceState");
+  const qEl = document.getElementById("questionText");
+  const playersList = document.getElementById("playersList");
+
+  const LS_NAME = "jr_player_name";
+  const getName = () => localStorage.getItem(LS_NAME) || "";
+  const setName = (v) => localStorage.setItem(LS_NAME, v);
+  const clearName = () => localStorage.removeItem(LS_NAME);
+
+  const say = (txt, cls="warn") => { statusEl.className = cls; statusEl.textContent = txt; };
+  const setErr = (txt="") => { errEl.textContent = txt; };
+
+  function renderName(){
+    const n = getName();
+    playerNameEl.textContent = n || "—";
+    joinBox.style.display = n ? "none" : "block";
+  }
+  renderName();
+
+  clearBtn.onclick = () => { clearName(); renderName(); say("بانتظار التسجيل…","warn"); };
+
+  joinBtn.onclick = async () => {
+    setErr("");
+    const clean = (nameInput.value || "").trim();
+    if (!clean) return setErr("اكتب الاسم أولًا");
+    try{
+      await addDoc(playersCol, { name: clean, createdAt: serverTimestamp() });
+      setName(clean);
+      renderName();
+      say("تم التسجيل ✅","ok");
+    }catch(e){
+      say("فشل التسجيل ❌","err");
+      setErr("السبب غالبًا: Firestore Rules أو firebaseConfig مختلف. التفاصيل: " + (e?.message||e));
+    }
+  };
+
+  // Race -> Question
+  let unsubQ = null;
+  const safeUnsub = (fn)=>{ try{ fn && fn(); }catch(_){} };
+
+  onSnapshot(raceRef, (snap)=>{
+    setErr("");
+    if(!snap.exists()){
+      raceStateEl.textContent = "race/current غير موجود";
+      qEl.textContent = "اذهب للأدمن واضغط (تصفير السباق) مرة.";
+      dbgEl.textContent = `projectId=${firebaseConfig.projectId}`;
+      return;
+    }
+
+    const r = snap.data();
+    raceStateEl.textContent = `status=${r.status||"-"} | index=${r.questionIndex ?? "-"}`;
+    dbgEl.textContent = `projectId=${firebaseConfig.projectId} | activeQuestionId=${r.activeQuestionId ?? "null"}`;
+
+    if (r.status === "waiting") say("بانتظار بدء السباق من المنظم…","warn");
+    if (r.status === "running") say("السباق شغال ✅","ok");
+    if (r.status === "finished") say("انتهى السباق ✅","ok");
+
+    const qid = r.activeQuestionId || null;
+    if(!qid){
+      safeUnsub(unsubQ); unsubQ=null;
+      qEl.textContent = "بانتظار سؤال… (من الأدمن اضغط: بدء السباق ثم السؤال التالي)";
+      return;
+    }
+
+    safeUnsub(unsubQ);
+    unsubQ = onSnapshot(doc(questionsCol, qid), (qs)=>{
+      if(!qs.exists()){ qEl.textContent = "السؤال غير موجود داخل questions"; return; }
+      const q = qs.data();
+      qEl.textContent = q.text || q.question || "سؤال بدون نص";
+    });
+
+  }, (e)=>{
+    say("فشل قراءة السباق ❌","err");
+    setErr("السبب غالبًا Rules. التفاصيل: " + (e?.message||e));
+  });
+
+  // آخر 20 اسم (تأكيد)
+  const pq = query(playersCol, orderBy("createdAt","desc"), limit(20));
+  onSnapshot(pq, (snap)=>{
+    playersList.innerHTML = "";
+    snap.forEach(d=>{
+      const li = document.createElement("li");
+      li.textContent = d.data().name || "(بدون اسم)";
+      playersList.appendChild(li);
+    });
+  }, (e)=>{
+    setErr("ملاحظة: لا أستطيع قراءة players (Rules). " + (e?.message||e));
+  });
+</script>
+</body>
+</html>
