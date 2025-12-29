@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>سباق الجواد — المتسابق</title>
   <style>
-    body{font-family:system-ui,Segoe UI,Tahoma,Arial;background:#f6f7fb;margin:0;padding:22px}
-    .wrap{max-width:820px;margin:auto}
-    .card{background:#fff;border:1px solid #e6e8ef;border-radius:16px;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,.05);margin-bottom:12px}
-    h1{margin:0 0 6px 0;font-size:26px}
-    .sub{color:#666;margin-bottom:14px}
+    body{font-family:system-ui,Segoe UI,Tahoma,Arial;background:#f6f7fb;margin:0;padding:18px}
+    .wrap{max-width:860px;margin:auto}
+    .card{background:#fff;border:1px solid #e6e8ef;border-radius:16px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.05);margin-bottom:12px}
+    h1{margin:0 0 6px 0;font-size:24px}
+    .sub{color:#666;margin-bottom:10px}
     input,button{width:100%;padding:12px;border-radius:12px;border:1px solid #d7dbe6;font-size:16px}
     button{cursor:pointer}
+    button:disabled{opacity:.6;cursor:not-allowed}
     .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
     .pill{display:inline-block;padding:6px 12px;border-radius:999px;background:#f3f4f6;font-size:12px}
     .big{font-size:20px;font-weight:800}
@@ -20,8 +21,13 @@
     .warn{color:#b45309;font-weight:800}
     .err{color:#dc2626;font-weight:800}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;color:#444;white-space:pre-wrap}
-    ul{margin:8px 0 0 0;padding:0 18px}
-    a{color:#2563eb;text-decoration:none}
+    .opts{display:grid;gap:10px;margin-top:12px}
+    .optBtn{background:#fff;text-align:right}
+    .optBtn:hover{background:#f8fafc}
+    .optChosen{border-color:#16a34a}
+    .bar{height:10px;background:#eef2ff;border-radius:999px;overflow:hidden;margin-top:10px}
+    .bar > div{height:100%;background:#60a5fa;width:0%}
+    .hide{display:none}
   </style>
 </head>
 <body>
@@ -31,7 +37,7 @@
     <div class="row">
       <div>
         <h1>🏁 سباق الجواد — المتسابق</h1>
-        <div class="sub">سجّل اسمك، ثم انتظر المنظم يضغط (السؤال التالي).</div>
+        <div class="sub">سجّل اسمك، ثم اختر الإجابة عند ظهور الخيارات.</div>
       </div>
       <a class="pill" href="./admin.html?v=999" target="_blank">فتح الأدمن</a>
     </div>
@@ -60,20 +66,20 @@
   <div class="card">
     <div class="muted">حالة السباق:</div>
     <div id="raceState" class="big">—</div>
+
     <div style="height:10px"></div>
     <div class="muted">السؤال الحالي:</div>
     <div id="questionText" class="big">بانتظار بدء السباق…</div>
-  </div>
 
-  <div class="card">
-    <div class="muted">آخر 20 اسم مسجل (تأكيد أن التسجيل شغال):</div>
-    <ul id="playersList"></ul>
+    <div class="opts" id="optionsBox"></div>
+
+    <div id="answerNote" class="muted" style="margin-top:10px"></div>
   </div>
 
 </div>
 
 <script type="module">
-  // ✅ نفس firebaseConfig (مثبّت)
+  // ✅ مثبت كما أعطيتني (لا تعدل)
   const firebaseConfig = {
     apiKey: "AIzaSyCXRjGFao0aRxTU1zPnM80-I7NW5YP-yBM",
     authDomain: "jawad-race.firebaseapp.com",
@@ -86,27 +92,30 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
     getFirestore, doc, collection, addDoc, onSnapshot, serverTimestamp,
-    query, orderBy, limit
+    query, where, limit, getDocs
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const app = initializeApp(firebaseConfig);
   const db  = getFirestore(app);
 
-  const raceRef = doc(db, "race", "current");
-  const questionsCol = collection(db, "questions");
-  const playersCol = collection(db, "players");
+  const raceRef     = doc(db, "race", "current");
+  const questionsCol= collection(db, "questions");
+  const answersCol  = collection(db, "answers");
+  const playersCol  = collection(db, "players");
 
+  // UI
   const playerNameEl = document.getElementById("playerName");
-  const joinBox = document.getElementById("joinBox");
-  const nameInput = document.getElementById("nameInput");
-  const joinBtn = document.getElementById("joinBtn");
-  const clearBtn = document.getElementById("clearBtn");
-  const statusEl = document.getElementById("status");
-  const dbgEl = document.getElementById("dbg");
-  const errEl = document.getElementById("err");
-  const raceStateEl = document.getElementById("raceState");
-  const qEl = document.getElementById("questionText");
-  const playersList = document.getElementById("playersList");
+  const joinBox      = document.getElementById("joinBox");
+  const nameInput    = document.getElementById("nameInput");
+  const joinBtn      = document.getElementById("joinBtn");
+  const clearBtn     = document.getElementById("clearBtn");
+  const statusEl     = document.getElementById("status");
+  const dbgEl        = document.getElementById("dbg");
+  const errEl        = document.getElementById("err");
+  const raceStateEl  = document.getElementById("raceState");
+  const qEl          = document.getElementById("questionText");
+  const optionsBox   = document.getElementById("optionsBox");
+  const answerNote   = document.getElementById("answerNote");
 
   const LS_NAME = "jr_player_name";
   const getName = () => localStorage.getItem(LS_NAME) || "";
@@ -140,16 +149,117 @@
     }
   };
 
-  // Race -> Question
+  // ==== استخراج الخيارات من أي شكل شائع ====
+  function extractOptions(q){
+    if(!q) return [];
+    // 1) array مباشر
+    const directArrays = ["options","choices","answers","items","variants"];
+    for (const k of directArrays){
+      if (Array.isArray(q[k]) && q[k].filter(Boolean).length){
+        return q[k].map(String);
+      }
+    }
+    // 2) object choices {A:"",B:""}
+    if (q.choices && typeof q.choices === "object" && !Array.isArray(q.choices)){
+      const vals = Object.values(q.choices).filter(Boolean).map(String);
+      if (vals.length) return vals;
+    }
+    // 3) option1..4
+    const optN = ["option1","option2","option3","option4","option5","option6"];
+    const valsN = optN.map(k=>q[k]).filter(Boolean).map(String);
+    if (valsN.length) return valsN;
+
+    // 4) a,b,c,d or A,B,C,D
+    const abcd = ["a","b","c","d","A","B","C","D"];
+    const valsABCD = abcd.map(k=>q[k]).filter(Boolean).map(String);
+    if (valsABCD.length) return valsABCD;
+
+    // 5) text1..4
+    const txtN = ["text1","text2","text3","text4"];
+    const valsTxt = txtN.map(k=>q[k]).filter(Boolean).map(String);
+    if (valsTxt.length) return valsTxt;
+
+    return [];
+  }
+
+  // === حالة الإجابة ===
+  let currentQid = null;
+  let answeredKey = null; // "qid|name"
+  function makeAnsweredKey(qid){
+    return `${qid}||${getName()}`;
+  }
+
+  async function hasAnswered(qid){
+    const name = getName();
+    if(!name) return false;
+    // نبحث إن كان اللاعب أجاب على السؤال
+    const qy = query(answersCol, where("questionId","==", qid), where("playerName","==", name), limit(1));
+    const snap = await getDocs(qy);
+    return !snap.empty;
+  }
+
+  async function submitAnswer(qid, optionText, optionIndex){
+    const name = getName();
+    if(!name) { setErr("سجّل اسمك أولًا"); return; }
+    await addDoc(answersCol, {
+      questionId: qid,
+      playerName: name,
+      optionText,
+      optionIndex,
+      createdAt: serverTimestamp(),
+    });
+  }
+
+  function clearOptionsUI(){
+    optionsBox.innerHTML = "";
+    answerNote.textContent = "";
+  }
+
+  function renderOptions(qid, options){
+    clearOptionsUI();
+    if(!options.length){
+      answerNote.innerHTML = "⚠️ <b>ما لقيت خيارات لهذا السؤال</b> داخل Firestore. لازم تضيف خيارات في وثيقة السؤال (options أو choices أو option1..4).";
+      return;
+    }
+
+    const key = makeAnsweredKey(qid);
+    answeredKey = key;
+
+    options.forEach((txt, idx)=>{
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "optBtn";
+      btn.textContent = `(${idx+1}) ${txt}`;
+      btn.onclick = async () => {
+        setErr("");
+        try{
+          // منع تكرار الإجابة
+          btn.disabled = true;
+          await submitAnswer(qid, txt, idx);
+          answerNote.innerHTML = "✅ تم تسجيل إجابتك.";
+          // اقفل جميع الأزرار
+          [...optionsBox.querySelectorAll("button")].forEach(b=>b.disabled=true);
+          btn.classList.add("optChosen");
+        }catch(e){
+          setErr("فشل تسجيل الإجابة: " + (e?.message || String(e)));
+          btn.disabled = false;
+        }
+      };
+      optionsBox.appendChild(btn);
+    });
+  }
+
+  // ==== متابعة السباق + السؤال ====
   let unsubQ = null;
   const safeUnsub = (fn)=>{ try{ fn && fn(); }catch(_){} };
 
-  onSnapshot(raceRef, (snap)=>{
+  onSnapshot(raceRef, async (snap)=>{
     setErr("");
     if(!snap.exists()){
       raceStateEl.textContent = "race/current غير موجود";
       qEl.textContent = "اذهب للأدمن واضغط (تصفير السباق) مرة.";
       dbgEl.textContent = `projectId=${firebaseConfig.projectId}`;
+      clearOptionsUI();
       return;
     }
 
@@ -165,33 +275,45 @@
     if(!qid){
       safeUnsub(unsubQ); unsubQ=null;
       qEl.textContent = "بانتظار سؤال… (من الأدمن اضغط: بدء السباق ثم السؤال التالي)";
+      clearOptionsUI();
+      currentQid = null;
       return;
     }
 
+    // سؤال جديد؟
+    if (currentQid !== qid){
+      currentQid = qid;
+      clearOptionsUI();
+    }
+
     safeUnsub(unsubQ);
-    unsubQ = onSnapshot(doc(questionsCol, qid), (qs)=>{
-      if(!qs.exists()){ qEl.textContent = "السؤال غير موجود داخل questions"; return; }
+    unsubQ = onSnapshot(doc(questionsCol, qid), async (qs)=>{
+      if(!qs.exists()){
+        qEl.textContent = "السؤال غير موجود داخل questions";
+        clearOptionsUI();
+        return;
+      }
       const q = qs.data();
-      qEl.textContent = q.text || q.question || "سؤال بدون نص";
+      qEl.textContent = q.text || q.question || q.title || "سؤال بدون نص";
+
+      const options = extractOptions(q);
+      renderOptions(qid, options);
+
+      // إذا اللاعب أجاب سابقًا، اقفل الخيارات وعرّف المستخدم
+      try{
+        const done = await hasAnswered(qid);
+        if(done){
+          answerNote.innerHTML = "✅ أنت جاوبت هذا السؤال مسبقًا.";
+          [...optionsBox.querySelectorAll("button")].forEach(b=>b.disabled=true);
+        }
+      }catch(_){}
     });
 
   }, (e)=>{
     say("فشل قراءة السباق ❌","err");
-    setErr("السبب غالبًا: Firestore Rules. التفاصيل: " + (e?.message || String(e)));
+    setErr("السبب غالبًا: Rules. التفاصيل: " + (e?.message || String(e)));
   });
 
-  // آخر 20 اسم
-  const pq = query(playersCol, orderBy("createdAt","desc"), limit(20));
-  onSnapshot(pq, (snap)=>{
-    playersList.innerHTML = "";
-    snap.forEach(d=>{
-      const li = document.createElement("li");
-      li.textContent = d.data().name || "(بدون اسم)";
-      playersList.appendChild(li);
-    });
-  }, (e)=>{
-    setErr("ملاحظة: لا أستطيع قراءة players (Rules). " + (e?.message || String(e)));
-  });
 </script>
 </body>
 </html>
