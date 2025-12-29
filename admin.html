@@ -3,43 +3,50 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>سباق الجواد - أدمن</title>
+  <title>سباق الجواد — الأدمن</title>
   <style>
-    body{font-family:system-ui,Segoe UI,Tahoma,Arial;margin:20px;line-height:1.7}
-    .card{max-width:560px;margin:auto;border:1px solid #ddd;border-radius:14px;padding:16px}
-    button{font-size:16px;padding:12px;border-radius:10px;border:1px solid #ccc;cursor:pointer;width:100%}
-    .row{display:flex;gap:10px}
-    .muted{color:#666}
-    .big{font-size:20px;font-weight:700}
-    .ok{color:green}
-    .warn{color:#b45309}
-    .danger{color:#b91c1c}
+    body{font-family:system-ui,Segoe UI,Tahoma,Arial;background:#f6f7fb;margin:0;padding:22px}
+    .wrap{max-width:720px;margin:auto}
+    .card{background:#fff;border:1px solid #e6e8ef;border-radius:16px;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,.05)}
+    h1{margin:0 0 6px 0;font-size:26px}
+    .sub{color:#666;margin-bottom:14px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    button{padding:14px;border-radius:12px;border:1px solid #d7dbe6;font-size:16px;cursor:pointer}
+    .btn-reset{background:#f3f4f6}
+    .btn-start{background:#dcfce7}
+    .btn-next{background:#dbeafe;grid-column:1 / -1}
+    .btn-finish{background:#fee2e2;grid-column:1 / -1}
+    .status{margin-top:12px;padding:10px;border-radius:12px;background:#f8fafc;border:1px dashed #e5e7eb}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;color:#444}
+    .ok{color:#16a34a;font-weight:700}
+    .warn{color:#b45309;font-weight:700}
+    .err{color:#dc2626;font-weight:700}
+    a{color:#2563eb;text-decoration:none}
   </style>
 </head>
 <body>
+<div class="wrap">
   <div class="card">
-    <div class="big">🎛 لوحة تحكم الأدمن</div>
-    <div class="muted">التشغيل الصحيح: تصفير → بدء السباق → السؤال التالي</div>
-    <hr/>
+    <h1>🎛 لوحة تحكم الأدمن</h1>
+    <div class="sub">التشغيل الصحيح: <b>تصفير</b> → <b>بدء</b> → <b>السؤال التالي</b>. (تم توحيد المسار على <span class="mono">race/current</span>)</div>
 
-    <div class="row">
-      <button id="resetBtn">تصفير السباق</button>
-      <button id="startBtn">بدء السباق</button>
+    <div class="grid">
+      <button class="btn-reset" id="resetBtn">🔄 تصفير السباق</button>
+      <button class="btn-start" id="startBtn">▶️ بدء السباق</button>
+      <button class="btn-next" id="nextBtn">⏭️ السؤال التالي</button>
+      <button class="btn-finish" id="finishBtn">⛔ إنهاء السباق</button>
     </div>
 
-    <div style="height:10px"></div>
-    <button id="nextBtn">السؤال التالي ⏭️</button>
-
-    <div style="height:10px"></div>
-    <button id="finishBtn" class="danger">إنهاء السباق</button>
-
-    <hr/>
-    <div id="status" class="warn">جاهز…</div>
-    <div id="debug" class="muted"></div>
+    <div class="status">
+      <div id="msg" class="warn">جاهز…</div>
+      <div id="dbg" class="mono"></div>
+      <div style="margin-top:8px" class="mono">رابط المتسابق: <a href="./?v=1" target="_blank">فتح المتسابق</a></div>
+    </div>
   </div>
+</div>
 
 <script type="module">
-  // ✅ ضع بيانات Firebase هنا (نفسها في index.html)
+  // ✅ نفس firebaseConfig بالضبط في index.html
   const firebaseConfig = {
     apiKey: "PUT_YOURS",
     authDomain: "PUT_YOURS",
@@ -51,106 +58,130 @@
 
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
-    getFirestore,
-    doc,
-    collection,
-    getDocs,
-    getDoc,
-    setDoc,
-    updateDoc,
-    query,
-    orderBy,
-    limit,
-    serverTimestamp,
-    onSnapshot
+    getFirestore, doc, collection, setDoc, updateDoc, getDoc, getDocs,
+    query, orderBy, limit, serverTimestamp, onSnapshot
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  const db  = getFirestore(app);
 
+  // ✅ مصدر الحقيقة الوحيد
   const raceRef = doc(db, "race", "current");
   const questionsCol = collection(db, "questions");
 
-  const statusEl = document.getElementById("status");
-  const debugEl  = document.getElementById("debug");
+  const msg = document.getElementById("msg");
+  const dbg = document.getElementById("dbg");
 
-  function setStatus(msg, cls="warn"){ statusEl.className = cls; statusEl.textContent = msg; }
+  const say = (text, cls="warn") => { msg.className = cls; msg.textContent = text; };
 
+  // ✅ تحميل الأسئلة بدون الاعتماد على order:
+  // نحاول order، وإذا ما نفع نرجع لـ createdAt، وإذا ما نفع نجيب أي 500 بدون ترتيب.
   let questionsCache = null;
-  async function loadQuestionsOnce(){
+
+  async function loadQuestionsSmart(){
     if (questionsCache) return questionsCache;
 
-    // إذا ما عندك حقل order في questions: غيّره إلى createdAt
-    const q = query(questionsCol, orderBy("order", "asc"), limit(500));
-    const snap = await getDocs(q);
+    // 1) جرّب order
+    try{
+      const q1 = query(questionsCol, orderBy("order","asc"), limit(500));
+      const s1 = await getDocs(q1);
+      const arr1 = s1.docs.map(d => ({id:d.id, ...d.data()}));
+      if (arr1.length){ questionsCache = arr1; return arr1; }
+    }catch(_){}
 
-    questionsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    if (!questionsCache.length) throw new Error("لا يوجد أسئلة داخل questions");
+    // 2) جرّب createdAt
+    try{
+      const q2 = query(questionsCol, orderBy("createdAt","asc"), limit(500));
+      const s2 = await getDocs(q2);
+      const arr2 = s2.docs.map(d => ({id:d.id, ...d.data()}));
+      if (arr2.length){ questionsCache = arr2; return arr2; }
+    }catch(_){}
 
-    return questionsCache;
+    // 3) بدون ترتيب
+    const s3 = await getDocs(query(questionsCol, limit(500)));
+    const arr3 = s3.docs.map(d => ({id:d.id, ...d.data()}));
+    if (!arr3.length) throw new Error("لا يوجد أسئلة داخل questions");
+    questionsCache = arr3;
+    return arr3;
   }
 
-  document.getElementById("resetBtn").onclick = async () => {
+  async function resetRace(){
     await setDoc(raceRef, {
       status: "waiting",
       activeQuestionId: null,
       questionIndex: -1,
       updatedAt: serverTimestamp(),
-    }, { merge: true });
+    }, { merge:true });
+  }
 
-    setStatus("✅ تم تصفير السباق", "ok");
+  async function startRace(){
+    await updateDoc(raceRef, { status:"running", updatedAt: serverTimestamp() });
+  }
+
+  async function nextQuestion(){
+    const qs = await loadQuestionsSmart();
+    const rSnap = await getDoc(raceRef);
+    const r = rSnap.exists() ? rSnap.data() : { questionIndex: -1 };
+
+    const nextIndex = (r.questionIndex ?? -1) + 1;
+
+    if (nextIndex >= qs.length){
+      await updateDoc(raceRef, {
+        status:"finished",
+        activeQuestionId: null,
+        questionIndex: qs.length - 1,
+        updatedAt: serverTimestamp()
+      });
+      say("🏁 انتهت الأسئلة", "ok");
+      return;
+    }
+
+    await updateDoc(raceRef, {
+      status:"running",
+      activeQuestionId: qs[nextIndex].id,
+      questionIndex: nextIndex,
+      updatedAt: serverTimestamp()
+    });
+    say(`⏭️ تم إطلاق السؤال رقم ${nextIndex+1}`, "ok");
+  }
+
+  async function finishRace(){
+    await updateDoc(raceRef, { status:"finished", activeQuestionId:null, updatedAt: serverTimestamp() });
+    say("⛔ تم إنهاء السباق", "ok");
+  }
+
+  document.getElementById("resetBtn").onclick = async () => {
+    try{ await resetRace(); say("✅ تم تصفير السباق", "ok"); }
+    catch(e){ say("خطأ Reset: "+(e?.message||e),"err"); }
   };
 
   document.getElementById("startBtn").onclick = async () => {
-    await updateDoc(raceRef, { status: "running", updatedAt: serverTimestamp() });
-    setStatus("▶️ السباق بدأ — اضغط (السؤال التالي)", "ok");
+    try{ await startRace(); say("▶️ بدأ السباق — اضغط (السؤال التالي)", "ok"); }
+    catch(e){ say("خطأ Start: "+(e?.message||e),"err"); }
   };
 
   document.getElementById("nextBtn").onclick = async () => {
-    const qs = await loadQuestionsOnce();
-    const raceSnap = await getDoc(raceRef);
-    const race = raceSnap.exists() ? raceSnap.data() : { questionIndex: -1 };
-
-    const nextIndex = (race.questionIndex ?? -1) + 1;
-
-    if (nextIndex >= qs.length) {
-      await updateDoc(raceRef, {
-        status: "finished",
-        activeQuestionId: null,
-        questionIndex: qs.length - 1,
-        updatedAt: serverTimestamp(),
-      });
-      setStatus("🏁 انتهت الأسئلة", "ok");
-      return;
-    }
-
-    await updateDoc(raceRef, {
-      status: "running",
-      activeQuestionId: qs[nextIndex].id,
-      questionIndex: nextIndex,
-      updatedAt: serverTimestamp(),
-    });
-
-    setStatus(`⏭️ تم إطلاق السؤال رقم ${nextIndex + 1}`, "ok");
+    try{ await nextQuestion(); }
+    catch(e){ say("خطأ Next: "+(e?.message||e),"err"); }
   };
 
   document.getElementById("finishBtn").onclick = async () => {
-    await updateDoc(raceRef, {
-      status: "finished",
-      activeQuestionId: null,
-      updatedAt: serverTimestamp(),
-    });
-    setStatus("⛔ تم إنهاء السباق", "ok");
+    try{ await finishRace(); }
+    catch(e){ say("خطأ Finish: "+(e?.message||e),"err"); }
   };
 
-  onSnapshot(raceRef, (snap) => {
-    if (!snap.exists()) {
-      debugEl.textContent = "وثيقة race/current غير موجودة (اضغط تصفير)";
+  // Debug حي
+  onSnapshot(raceRef, (snap)=>{
+    if(!snap.exists()){
+      dbg.textContent = "race/current غير موجود — اضغط (تصفير السباق)";
       return;
     }
     const r = snap.data();
-    debugEl.textContent = `status=${r.status || "-"} | activeQuestionId=${r.activeQuestionId ?? "null"} | index=${r.questionIndex ?? "-"}`;
+    dbg.textContent = `status=${r.status||"-"} | activeQuestionId=${r.activeQuestionId ?? "null"} | index=${r.questionIndex ?? "-"}`;
+  }, (e)=>{
+    dbg.textContent = "Listener error: " + (e?.message||e);
   });
+
 </script>
 </body>
 </html>
