@@ -12,8 +12,8 @@
     button{cursor:pointer}
     .opt{background:#f1f5f9;margin-top:10px;text-align:right}
     .opt:hover{background:#e2e8f0}
-    .ok{color:#16a34a;font-weight:800}
-    .err{color:#dc2626;font-weight:800}
+    .ok{color:#16a34a;font-weight:900}
+    .err{color:#dc2626;font-weight:900}
     .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#555;white-space:pre-wrap}
     .muted{color:#666}
   </style>
@@ -21,7 +21,7 @@
 <body>
 <div class="card">
   <h1>🏁 سباق الجواد — المتسابق</h1>
-  <div class="muted">سجّل اسمك. عند بدء الأدمن تظهر الأسئلة تلقائيًا (10 أسئلة / دقيقتين).</div>
+  <div class="muted">سجّل اسمك. عند بدء الأدمن تظهر الأسئلة تلقائياً (10 أسئلة / 120 ثانية).</div>
 
   <input id="nameInput" placeholder="اكتب اسمك" />
   <button id="joinBtn" type="button">تسجيل</button>
@@ -66,31 +66,23 @@
   const setNameLS = (v)=>localStorage.setItem(LS,v);
   const clearNameLS = ()=>localStorage.removeItem(LS);
 
-  let raceState = { status:"waiting", raceId:null, durationSec:120, questionsOrder:[] };
-  let startedAtLocalMs = null;
+  function nameKey(name){ return encodeURIComponent(name.trim().toLowerCase()); }
 
+  // state
+  let raceState = { status:"waiting", raceId:null, durationSec:120, questionsOrder:[], startedAtMs:null };
   let questionIndex = 0;
   let currentQuestion = null;
   let questionShownAtMs = null;
-  let answeredSet = new Set(); // questionId answered
+  let answeredSet = new Set();
+  let startedOnceForRaceId = null;
 
-  function renderName(){
-    $("nameInput").value = getName() || "";
-  }
-  renderName();
-
-  function nameKey(name){
-    return encodeURIComponent(name.trim().toLowerCase());
-  }
+  $("nameInput").value = getName() || "";
 
   $("joinBtn").onclick = async()=>{
     const name = $("nameInput").value.trim();
     if(!name){ msg("اكتب اسمك","err"); return; }
-
-    // doc ثابت لكل اسم يمنع تكرار ضخم
     const pRef = doc(db, "players", nameKey(name));
     await setDoc(pRef, { name, updatedAt: serverTimestamp() }, { merge:true });
-
     setNameLS(name);
     msg("✅ تم التسجيل","ok");
   };
@@ -101,6 +93,25 @@
     msg("تم مسح الاسم");
   };
 
+  function isTimeOver(){
+    if(!raceState.startedAtMs) return false;
+    const endMs = raceState.startedAtMs + (raceState.durationSec*1000);
+    return Date.now() >= endMs;
+  }
+
+  function renderStatus(){
+    if(raceState.status !== "running" || !raceState.startedAtMs){
+      $("raceStatus").textContent = `status=${raceState.status} | questions=${raceState.questionsOrder.length}/10`;
+      return;
+    }
+    const left = Math.max(0, (raceState.startedAtMs + raceState.durationSec*1000 - Date.now())/1000);
+    $("raceStatus").textContent = `status=running | المتبقي=${left.toFixed(0)}ث | سؤال ${Math.min(questionIndex+1,10)}/10`;
+  }
+
+  function lockUI(){
+    [...$("options").querySelectorAll("button")].forEach(b=>b.disabled=true);
+  }
+
   function showQuestion(q){
     currentQuestion = q;
     $("questionText").textContent = q.text || "—";
@@ -108,7 +119,7 @@
     questionShownAtMs = Date.now();
 
     if(!Array.isArray(q.options) || q.options.length !== 4){
-      msg("⚠️ هذا السؤال لا يحتوي options. اطلب من الأدمن استيراد الأسئلة.","err");
+      msg("⚠️ السؤال ناقص خيارات. اطلب من الأدمن استيراد الأسئلة.","err");
       return;
     }
 
@@ -125,7 +136,7 @@
   async function loadQuestionById(qid){
     const qsnap = await getDoc(doc(db,"questions",qid));
     if(!qsnap.exists()){
-      msg("❌ سؤال غير موجود (اطلب من الأدمن استيراد الأسئلة)","err");
+      msg("❌ سؤال غير موجود (استورد الأسئلة من الأدمن)","err");
       return null;
     }
     return qsnap.data();
@@ -144,18 +155,27 @@
     const q = await loadQuestionById(qid);
     if(!q) return;
     showQuestion(q);
+    renderStatus();
   }
 
   async function submitAnswer(optionIndex){
     const name = getName();
-    if(!name){ msg("❌ سجل اسمك أولًا","err"); return; }
+    if(!name){ msg("❌ سجل اسمك أولاً","err"); return; }
+
     if(raceState.status !== "running"){ msg("بانتظار بدء الأدمن…"); return; }
+    if(!raceState.raceId){ msg("بانتظار سباق جديد…"); return; }
+
+    if(isTimeOver()){
+      $("questionText").textContent = "⏱ انتهى الوقت";
+      $("options").innerHTML = "";
+      msg("انتهت الـ 120 ثانية.","ok");
+      return;
+    }
 
     const qid = raceState.questionsOrder[questionIndex];
     if(!qid || answeredSet.has(qid)) return;
 
-    // منع ضغط متعدد
-    [...$("options").querySelectorAll("button")].forEach(b=>b.disabled=true);
+    lockUI();
 
     const timeMs = questionShownAtMs ? Math.max(0, Date.now() - questionShownAtMs) : null;
     const correctIndex = Number.isFinite(Number(currentQuestion?.correctIndex)) ? Number(currentQuestion.correctIndex) : -1;
@@ -180,51 +200,44 @@
   // Listener للسباق
   onSnapshot(raceRef, async (snap)=>{
     if(!snap.exists()) return;
-    const r = snap.data();
 
+    const r = snap.data();
     raceState = {
       status: r.status || "waiting",
       raceId: r.raceId || null,
       durationSec: Number.isFinite(Number(r.durationSec)) ? Number(r.durationSec) : 120,
-      questionsOrder: Array.isArray(r.questionsOrder) ? r.questionsOrder : []
+      questionsOrder: Array.isArray(r.questionsOrder) ? r.questionsOrder : [],
+      startedAtMs: r.startedAt?.toMillis ? r.startedAt.toMillis() : null
     };
 
-    $("raceStatus").textContent =
-      `status=${raceState.status} | raceId=${raceState.raceId||"null"} | questions=${raceState.questionsOrder.length}/10`;
+    renderStatus();
 
-    // إذا بدأ سباق جديد (raceId تغير) ابدأ من الصفر
+    // تشغيل جديد
     if(raceState.status === "running" && raceState.raceId){
-      if(!startedAtLocalMs){
-        startedAtLocalMs = Date.now();
-        questionIndex = 0;
+      if(startedOnceForRaceId !== raceState.raceId){
+        startedOnceForRaceId = raceState.raceId;
         answeredSet = new Set();
+        questionIndex = 0;
         msg("🚀 بدأت المسابقة!","ok");
         await gotoIndex(0);
       }
     }
 
-    // إذا انتهى السباق
+    // انتهاء
     if(raceState.status === "finished"){
       $("options").innerHTML = "";
-      msg("⛔ انتهت المسابقة.","ok");
+      $("questionText").textContent = "⛔ انتهت المسابقة";
+      msg("تم إنهاء المسابقة.","ok");
     }
   });
 
-  // مؤقت دقيقتين محلي (لإغلاق الأسئلة بعد 120 ثانية)
+  // تحديث عداد الحالة
   setInterval(()=>{
-    if(raceState.status !== "running" || !raceState.raceId) return;
-    if(!startedAtLocalMs) return;
-    const elapsed = (Date.now() - startedAtLocalMs) / 1000;
-    const left = Math.max(0, raceState.durationSec - elapsed);
-    $("raceStatus").textContent =
-      `status=${raceState.status} | المتبقي=${left.toFixed(0)}ث | سؤال ${questionIndex+1}/10`;
-    if(left <= 0){
-      $("options").innerHTML = "";
-      $("questionText").textContent = "⏱ انتهى الوقت";
-      msg("انتهت الدقيقتين.","ok");
+    renderStatus();
+    if(raceState.status === "running" && isTimeOver()){
+      lockUI();
     }
   }, 500);
-
 </script>
 </body>
 </html>
