@@ -5,14 +5,15 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>سباق الجواد — الأدمن</title>
   <style>
-    body{font-family:system-ui,Segoe UI,Tahoma,Arial;background:#f6f7fb;margin:0;padding:18px}
-    .wrap{max-width:1100px;margin:auto;display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .card{background:#fff;border:1px solid #e6e8ef;border-radius:16px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.05)}
+    body{font-family:system-ui,Tahoma,Arial;background:#f6f7fb;margin:0;padding:18px}
+    .wrap{max-width:1200px;margin:auto;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .card{background:#fff;border:1px solid #e6e8ef;border-radius:16px;padding:14px;box-shadow:0 8px 22px rgba(0,0,0,.06)}
     h1{margin:0 0 6px 0;font-size:22px}
     .sub{color:#666;margin-bottom:10px}
-    button,input{padding:12px;border-radius:12px;border:1px solid #d7dbe6;font-size:15px}
+    button,input,textarea{padding:12px;border-radius:12px;border:1px solid #d7dbe6;font-size:15px}
     button{cursor:pointer}
     button:disabled{opacity:.6;cursor:not-allowed}
+    textarea{width:100%;min-height:180px;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .btn-reset{background:#f3f4f6}
     .btn-start{background:#dcfce7}
@@ -21,21 +22,22 @@
     .ok{color:#16a34a;font-weight:800}
     .warn{color:#b45309;font-weight:800}
     .err{color:#dc2626;font-weight:800}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;color:#444;white-space:pre-wrap}
+    .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:#444;white-space:pre-wrap}
     table{width:100%;border-collapse:collapse}
     th,td{border-bottom:1px solid #eee;padding:8px;text-align:right;font-size:14px}
     th{background:#fafafa}
     .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-    .pill{display:inline-block;padding:6px 12px;border-radius:999px;background:#f3f4f6;font-size:12px}
+    .pill{display:inline-block;padding:6px 12px;border-radius:999px;background:#f3f4f6;font-size:12px;text-decoration:none;color:#111}
   </style>
 </head>
 <body>
 <div class="wrap">
+
   <div class="card">
     <div class="row">
       <div>
         <h1>🎛 لوحة الأدمن</h1>
-        <div class="sub">التشغيل: تصفير → بدء → (Auto أو التالي). المسار: <span class="mono">race/current</span></div>
+        <div class="sub">التشغيل: <b>استيراد أسئلة</b> → <b>تصفير</b> → <b>بدء</b> → <b>التالي</b>. (المسار: <span class="mono">race/current</span>)</div>
       </div>
       <a class="pill" href="./?v=999" target="_blank">فتح المتسابق</a>
     </div>
@@ -47,44 +49,47 @@
       <button class="btn-finish" id="finishBtn" type="button">⛔ إنهاء</button>
     </div>
 
-    <div style="margin-top:10px" class="grid">
-      <input id="autoSec" type="number" min="5" value="20" placeholder="مدة السؤال بالثواني" />
-      <button id="autoToggle" type="button">تشغيل تلقائي: OFF</button>
-    </div>
-
     <div style="margin-top:10px" id="msg" class="warn">جاهز…</div>
     <div id="dbg" class="mono" style="margin-top:6px"></div>
     <div id="err" class="mono err" style="margin-top:6px"></div>
   </div>
 
   <div class="card">
+    <h1>📥 استيراد الأسئلة (قالب JSON)</h1>
+    <div class="sub">الصق قالب الأسئلة هنا ثم اضغط <b>رفع الأسئلة</b>. سيُنشئ: questions + يضبط order + correctIndex + ويحدث race/current تلقائيًا.</div>
+    <textarea id="qJson"></textarea>
+    <div class="grid" style="margin-top:10px">
+      <button id="importBtn" type="button">⬆️ رفع الأسئلة</button>
+      <button id="wipeBtn" type="button">🧹 حذف الأسئلة/الإجابات/اللاعبين (تنظيف كامل)</button>
+    </div>
+    <div class="mono" style="margin-top:10px">تنبيه: الحذف يمسح collections (players/answers/questions) — استخدمه فقط لو تبغى تبدأ من الصفر.</div>
+  </div>
+
+  <div class="card">
     <h1>👥 المشاركون (آخر 50)</h1>
-    <div class="sub">إذا ما ظهروا هنا فالمشكلة ليست “كود” بل تسجيل players.</div>
     <table>
       <thead><tr><th>#</th><th>الاسم</th><th>الوقت</th></tr></thead>
       <tbody id="playersT"></tbody>
     </table>
   </div>
 
-  <div class="card" style="grid-column:1/-1">
+  <div class="card">
     <h1>🏆 الترتيب (صحيح + وقت)</h1>
-    <div class="sub">يعتمد على وجود <b>correctIndex</b> داخل كل سؤال.</div>
+    <div class="sub">يعتمد على وجود <b>correctIndex</b> في الأسئلة + حفظ answers مع timeMs.</div>
     <table>
       <thead>
         <tr>
-          <th>#</th>
-          <th>الاسم</th>
-          <th>الإجابات الصحيحة</th>
-          <th>إجمالي الوقت (ث)</th>
-          <th>آخر إجابة</th>
+          <th>#</th><th>الاسم</th><th>الصحيح</th><th>إجمالي الوقت (ث)</th><th>آخر إجابة</th>
         </tr>
       </thead>
       <tbody id="boardT"></tbody>
     </table>
   </div>
+
 </div>
 
 <script type="module">
+  // ✅ ثابت (لا تعدّل)
   const firebaseConfig = {
     apiKey: "AIzaSyCXRjGFao0aRxTU1zPnM80-I7NW5YP-yBM",
     authDomain: "jawad-race.firebaseapp.com",
@@ -96,8 +101,9 @@
 
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
-    getFirestore, doc, collection, setDoc, updateDoc, getDoc, getDocs,
-    query, orderBy, limit, serverTimestamp, onSnapshot, where
+    getFirestore, doc, collection, setDoc, updateDoc, getDoc, getDocs, addDoc,
+    query, orderBy, limit, serverTimestamp, onSnapshot, where,
+    writeBatch, deleteDoc
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const app = initializeApp(firebaseConfig);
@@ -115,49 +121,38 @@
   const playersT = document.getElementById("playersT");
   const boardT   = document.getElementById("boardT");
 
-  const autoSecInput = document.getElementById("autoSec");
-  const autoToggleBtn = document.getElementById("autoToggle");
+  const qJsonEl  = document.getElementById("qJson");
 
   const say = (t, cls="warn") => { msgEl.className = cls; msgEl.textContent = t; };
   const setErr = (t="") => { errEl.textContent = t; };
 
-  // -------- Questions loading (IDs حقيقية) --------
-  let questions = [];
-  async function loadQuestions(){
-    // يحاول order ثم createdAt ثم بدون ترتيب
-    try{
-      const s1 = await getDocs(query(questionsCol, orderBy("order","asc"), limit(500)));
-      questions = s1.docs.map(d=>({id:d.id, ...d.data()}));
-      if(questions.length) return questions;
-    }catch(_){}
-    try{
-      const s2 = await getDocs(query(questionsCol, orderBy("createdAt","asc"), limit(500)));
-      questions = s2.docs.map(d=>({id:d.id, ...d.data()}));
-      if(questions.length) return questions;
-    }catch(_){}
-    const s3 = await getDocs(query(questionsCol, limit(500)));
-    questions = s3.docs.map(d=>({id:d.id, ...d.data()}));
-    if(!questions.length) throw new Error("لا يوجد أسئلة داخل questions");
-    return questions;
+  // ضع القالب الافتراضي داخل المربع (يساعدك)
+  qJsonEl.value = `[
+  {
+    "text": "أين وُلد الإمام محمد الجواد (ع)؟",
+    "options": ["المدينة المنورة", "مكة المكرمة", "الكوفة", "بغداد"],
+    "correctIndex": 0,
+    "durationSec": 20
+  },
+  {
+    "text": "من هو والد الإمام الجواد (ع)؟",
+    "options": ["الإمام الكاظم (ع)", "الإمام الرضا (ع)", "الإمام الهادي (ع)", "الإمام الصادق (ع)"],
+    "correctIndex": 1,
+    "durationSec": 20
   }
+]`;
 
-  function getDurationForIndex(i){
-    const q = questions[i];
-    const d = Number(q?.durationSec);
-    const fallback = Number(autoSecInput.value || 20);
-    return Number.isFinite(d) && d>0 ? d : (Number.isFinite(fallback)&&fallback>0?fallback:20);
-  }
-
-  // -------- Race controls --------
+  // ---- Controls ----
   async function resetRace(){
-    await loadQuestions();
+    const qSnap = await getDocs(query(questionsCol, orderBy("order","asc"), limit(1000)));
+    const ids = qSnap.docs.map(d=>d.id);
     await setDoc(raceRef, {
       status: "waiting",
       activeQuestionId: null,
       questionIndex: -1,
+      questionsOrder: ids,
+      questionStartedAt: null,
       updatedAt: serverTimestamp(),
-      // نخزن IDs مرتبة لتفادي "غير موجود"
-      questionsOrder: questions.map(q=>q.id),
     }, { merge:true });
   }
 
@@ -166,10 +161,18 @@
   }
 
   async function nextQuestion(){
-    await loadQuestions();
     const rs = await getDoc(raceRef);
-    const r  = rs.exists()? rs.data() : { questionIndex: -1 };
-    const order = Array.isArray(r.questionsOrder) && r.questionsOrder.length ? r.questionsOrder : questions.map(q=>q.id);
+    const r  = rs.exists()? rs.data() : {};
+    const order = Array.isArray(r.questionsOrder) && r.questionsOrder.length ? r.questionsOrder : [];
+
+    if(!order.length){
+      // لو ما فيه ترتيب، نبنيه من questions
+      const qSnap = await getDocs(query(questionsCol, orderBy("order","asc"), limit(1000)));
+      const ids = qSnap.docs.map(d=>d.id);
+      if(!ids.length) throw new Error("لا توجد أسئلة. استخدم استيراد الأسئلة أولًا.");
+      await updateDoc(raceRef, { questionsOrder: ids, updatedAt: serverTimestamp() });
+      return nextQuestion();
+    }
 
     const nextIndex = (r.questionIndex ?? -1) + 1;
 
@@ -180,12 +183,12 @@
     }
 
     const nextId = order[nextIndex];
-    // تحقق أن السؤال موجود فعلاً
-    const qSnap = await getDoc(doc(db,"questions", nextId));
-    if(!qSnap.exists()){
-      // تخطي السؤال غير الموجود بدل ما يعلق السباق
+    // تأكد أن السؤال موجود
+    const qCheck = await getDoc(doc(db,"questions",nextId));
+    if(!qCheck.exists()){
+      // تخطي
       await updateDoc(raceRef, { questionIndex: nextIndex, updatedAt: serverTimestamp() });
-      say("⚠️ تم تخطي سؤال ID غير موجود","warn");
+      say("⚠️ تم تخطي سؤال غير موجود","warn");
       return nextQuestion();
     }
 
@@ -195,9 +198,7 @@
       questionIndex: nextIndex,
       questionStartedAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-      questionsOrder: order,
     });
-
     say(`⏭️ تم إطلاق السؤال رقم ${nextIndex+1}`,"ok");
   }
 
@@ -211,62 +212,95 @@
   document.getElementById("nextBtn").onclick  = async()=>{ setErr(""); try{ await nextQuestion(); }catch(e){ say("❌ فشل التالي","err"); setErr(e?.message||String(e)); } };
   document.getElementById("finishBtn").onclick= async()=>{ setErr(""); try{ await finishRace(); }catch(e){ say("❌ فشل الإنهاء","err"); setErr(e?.message||String(e)); } };
 
-  // -------- Auto mode --------
-  let autoOn = false;
-  let autoTimer = null;
+  // ---- Import questions ----
+  document.getElementById("importBtn").onclick = async()=>{
+    setErr("");
+    try{
+      const arr = JSON.parse(qJsonEl.value || "[]");
+      if(!Array.isArray(arr) || !arr.length) throw new Error("JSON لازم يكون Array وفيه عناصر.");
 
-  function setAutoUI(){
-    autoToggleBtn.textContent = `تشغيل تلقائي: ${autoOn ? "ON" : "OFF"}`;
-    autoToggleBtn.style.background = autoOn ? "#dcfce7" : "#f3f4f6";
-  }
-  setAutoUI();
+      // نكتب أسئلة بآي دي ثابت q1 q2...
+      const batch = writeBatch(db);
+      const ids = [];
 
-  autoToggleBtn.onclick = async()=>{
-    autoOn = !autoOn;
-    setAutoUI();
-    if(autoTimer){ clearTimeout(autoTimer); autoTimer=null; }
-    if(autoOn){
-      say("✅ التلقائي ON — سيذهب للسؤال التالي حسب المدة","ok");
-      scheduleAuto();
-    }else{
-      say("⏸️ التلقائي OFF","warn");
+      arr.forEach((q, i)=>{
+        const id = `q${i+1}`;
+        ids.push(id);
+
+        const text = q.text || q.question;
+        const options = Array.isArray(q.options) ? q.options : [];
+        if(!text) throw new Error(`السؤال رقم ${i+1} ناقص text`);
+        if(options.length < 2) throw new Error(`السؤال رقم ${i+1} ناقص options`);
+
+        const correctIndex = Number.isFinite(Number(q.correctIndex)) ? Number(q.correctIndex) : 0;
+        const durationSec  = Number.isFinite(Number(q.durationSec))  ? Number(q.durationSec)  : 20;
+
+        batch.set(doc(db,"questions",id), {
+          text,
+          options: options.map(String),
+          correctIndex,
+          durationSec,
+          order: i+1,
+          updatedAt: serverTimestamp(),
+          createdAt: serverTimestamp(),
+        }, { merge:true });
+      });
+
+      await batch.commit();
+
+      // حدث السباق
+      await setDoc(raceRef, {
+        status: "waiting",
+        activeQuestionId: null,
+        questionIndex: -1,
+        questionsOrder: ids,
+        questionStartedAt: null,
+        updatedAt: serverTimestamp(),
+      }, { merge:true });
+
+      say(`✅ تم رفع ${arr.length} سؤال وضبط السباق`,"ok");
+    }catch(e){
+      say("❌ فشل استيراد الأسئلة","err");
+      setErr(e?.message||String(e));
     }
   };
 
-  async function scheduleAuto(){
-    if(!autoOn) return;
-    const rs = await getDoc(raceRef);
-    const r  = rs.exists()? rs.data(): null;
-    if(!r || r.status!=="running"){ autoTimer=setTimeout(scheduleAuto, 1500); return; }
-
-    // إذا ما فيه سؤال نشط، أطلق أول سؤال
-    if(!r.activeQuestionId){
-      await nextQuestion();
-      autoTimer=setTimeout(scheduleAuto, 500);
-      return;
-    }
-
-    // المدة = من السؤال الحالي
-    await loadQuestions();
-    const idx = r.questionIndex ?? 0;
-    const sec = getDurationForIndex(idx);
-    autoTimer = setTimeout(async ()=>{
-      try{ await nextQuestion(); }catch(_){}
-      scheduleAuto();
-    }, sec*1000);
+  // ---- Wipe (danger) ----
+  async function deleteAllIn(colRef, batchSize=200){
+    const snap = await getDocs(query(colRef, limit(batchSize)));
+    if(snap.empty) return;
+    const batch = writeBatch(db);
+    snap.docs.forEach(d=> batch.delete(d.ref));
+    await batch.commit();
+    if(snap.size === batchSize) await deleteAllIn(colRef, batchSize);
   }
 
-  // -------- Live debug --------
+  document.getElementById("wipeBtn").onclick = async()=>{
+    setErr("");
+    try{
+      if(!confirm("تأكيد: سيتم حذف questions + answers + players بالكامل. موافق؟")) return;
+      await deleteAllIn(playersCol);
+      await deleteAllIn(answersCol);
+      await deleteAllIn(questionsCol);
+      await setDoc(raceRef, { status:"waiting", activeQuestionId:null, questionIndex:-1, questionsOrder:[], updatedAt: serverTimestamp() }, {merge:true});
+      say("✅ تم التنظيف الكامل","ok");
+    }catch(e){
+      say("❌ فشل التنظيف","err");
+      setErr(e?.message||String(e));
+    }
+  };
+
+  // ---- Debug ----
   onSnapshot(raceRef, (snap)=>{
     if(!snap.exists()){
-      dbgEl.textContent = "race/current غير موجود — اضغط (تصفير)";
+      dbgEl.textContent = "race/current غير موجود — استخدم (استيراد) ثم (تصفير)";
       return;
     }
     const r = snap.data();
     dbgEl.textContent = `status=${r.status||"-"} | activeQuestionId=${r.activeQuestionId ?? "null"} | index=${r.questionIndex ?? "-"}`;
-  }, (e)=>{ dbgEl.textContent = "Listener error: " + (e?.message||String(e)); });
+  });
 
-  // -------- Players list --------
+  // ---- Players list ----
   onSnapshot(query(playersCol, orderBy("createdAt","desc"), limit(50)), (snap)=>{
     playersT.innerHTML = "";
     let i=1;
@@ -279,49 +313,39 @@
     });
   });
 
-  // -------- Leaderboard (correct + time) --------
-  // يعتمد على: answers(questionId, playerName, optionIndex, createdAt, timeMs optional)
-  // و questions(correctIndex)
-  async function buildQuestionCorrectMap(){
-    await loadQuestions();
+  // ---- Leaderboard ----
+  async function loadCorrectMap(){
+    const s = await getDocs(query(questionsCol, orderBy("order","asc"), limit(1000)));
     const map = new Map();
-    questions.forEach(q=>{
-      if(Number.isFinite(Number(q.correctIndex))) map.set(q.id, Number(q.correctIndex));
+    s.forEach(d=>{
+      const q = d.data();
+      map.set(d.id, Number.isFinite(Number(q.correctIndex)) ? Number(q.correctIndex) : null);
     });
     return map;
   }
 
-  let correctMap = new Map();
-  correctMap = await buildQuestionCorrectMap();
-
-  onSnapshot(query(answersCol, orderBy("createdAt","asc"), limit(2000)), async (snap)=>{
-    // تحديث correctMap بشكل دوري
-    correctMap = await buildQuestionCorrectMap();
-
-    const agg = new Map(); // name -> {correct, time, last}
+  onSnapshot(query(answersCol, orderBy("createdAt","asc"), limit(5000)), async (snap)=>{
+    const correctMap = await loadCorrectMap();
+    const agg = new Map(); // name -> {correct,time,last}
     snap.forEach(d=>{
       const a = d.data();
       const name = a.playerName || "—";
-      const qid = a.questionId;
+      const qid  = a.questionId;
       const chosen = Number(a.optionIndex);
-      const corr = correctMap.get(qid);
+      const corr   = correctMap.get(qid);
 
       if(!agg.has(name)) agg.set(name, {correct:0, time:0, last:""});
       const row = agg.get(name);
 
-      // وقت الإجابة: إذا موجود timeMs استخدمه، وإلا 0 (ما راح يكسر الترتيب)
-      const t = Number(a.timeMs);
-      row.time += Number.isFinite(t) ? Math.max(0, t)/1000 : 0;
+      const tms = Number(a.timeMs);
+      row.time += Number.isFinite(tms) ? Math.max(0,tms)/1000 : 0;
 
       if(Number.isFinite(corr) && Number.isFinite(chosen) && chosen===corr) row.correct += 1;
-
-      const lt = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleTimeString("ar-SA") : "";
-      row.last = lt;
+      row.last = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleTimeString("ar-SA") : row.last;
     });
 
-    // ترتيب: correct desc ثم time asc
     const arr = [...agg.entries()].map(([name,v])=>({name,...v}));
-    arr.sort((x,y)=> (y.correct-x.correct) || (x.time-y.time));
+    arr.sort((x,y)=>(y.correct-x.correct) || (x.time-y.time));
 
     boardT.innerHTML="";
     arr.forEach((r,idx)=>{
