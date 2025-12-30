@@ -21,13 +21,13 @@
 <body>
 <div class="card">
   <h1>🏁 سباق الجواد — المتسابق</h1>
-  <div class="muted">سجّل اسمك ثم اختر الإجابة عند ظهور الخيارات.</div>
+  <div class="muted">سجّل اسمك. عند بدء الأدمن تظهر الأسئلة تلقائيًا (10 أسئلة / دقيقتين).</div>
 
   <input id="nameInput" placeholder="اكتب اسمك" />
   <button id="joinBtn" type="button">تسجيل</button>
   <button id="clearBtn" type="button">مسح الاسم</button>
 
-  <div id="raceStatus" class="mono" style="margin-top:10px">بانتظار السباق…</div>
+  <div id="raceStatus" class="mono" style="margin-top:10px">بانتظار بدء الأدمن…</div>
   <div id="msg" style="margin-top:8px"></div>
 
   <hr style="margin:14px 0">
@@ -48,15 +48,13 @@
 
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
-    getFirestore, doc, collection, addDoc, onSnapshot, serverTimestamp,
-    query, where, limit, getDocs
+    getFirestore, doc, collection, setDoc, addDoc, getDoc, onSnapshot, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const app = initializeApp(firebaseConfig);
   const db  = getFirestore(app);
 
   const raceRef      = doc(db, "race", "current");
-  const questionsCol = collection(db, "questions");
   const playersCol   = collection(db, "players");
   const answersCol   = collection(db, "answers");
 
@@ -65,128 +63,168 @@
 
   const LS = "jr_player_name";
   const getName = ()=>localStorage.getItem(LS)||"";
-  const setName = (v)=>localStorage.setItem(LS,v);
-  const clearName = ()=>localStorage.removeItem(LS);
+  const setNameLS = (v)=>localStorage.setItem(LS,v);
+  const clearNameLS = ()=>localStorage.removeItem(LS);
 
-  let currentQuestionId = null;
-  let questionShownAt   = null;
+  let raceState = { status:"waiting", raceId:null, durationSec:120, questionsOrder:[] };
+  let startedAtLocalMs = null;
+
+  let questionIndex = 0;
+  let currentQuestion = null;
+  let questionShownAtMs = null;
+  let answeredSet = new Set(); // questionId answered
 
   function renderName(){
-    const n = getName();
-    $("nameInput").value = n || "";
+    $("nameInput").value = getName() || "";
   }
   renderName();
+
+  function nameKey(name){
+    return encodeURIComponent(name.trim().toLowerCase());
+  }
 
   $("joinBtn").onclick = async()=>{
     const name = $("nameInput").value.trim();
     if(!name){ msg("اكتب اسمك","err"); return; }
-    try{
-      await addDoc(playersCol, { name, createdAt: serverTimestamp() });
-      setName(name);
-      msg("✅ تم التسجيل","ok");
-    }catch(e){
-      msg("❌ فشل التسجيل: "+(e?.message||e),"err");
-    }
+
+    // doc ثابت لكل اسم يمنع تكرار ضخم
+    const pRef = doc(db, "players", nameKey(name));
+    await setDoc(pRef, { name, updatedAt: serverTimestamp() }, { merge:true });
+
+    setNameLS(name);
+    msg("✅ تم التسجيل","ok");
   };
 
   $("clearBtn").onclick = ()=>{
-    clearName();
+    clearNameLS();
     $("nameInput").value="";
     msg("تم مسح الاسم");
   };
 
-  async function alreadyAnswered(qid){
-    const name = getName();
-    if(!name) return false;
-    const qy = query(answersCol, where("questionId","==", qid), where("playerName","==", name), limit(1));
-    const s = await getDocs(qy);
-    return !s.empty;
-  }
-
-  async function submitAnswer(qid, optionText, optionIndex){
-    const name = getName();
-    if(!name){ msg("❌ سجل اسمك أولًا","err"); return; }
-
-    const timeMs = questionShownAt ? Math.max(0, Date.now() - questionShownAt) : null;
-
-    await addDoc(answersCol,{
-      questionId: qid,
-      playerName: name,
-      optionText,
-      optionIndex,
-      timeMs,
-      createdAt: serverTimestamp()
-    });
-
-    msg("✅ تم تسجيل الإجابة","ok");
-    // اقفل الأزرار
-    [...$("options").querySelectorAll("button")].forEach(b=>b.disabled=true);
-  }
-
-  function renderOptions(q){
+  function showQuestion(q){
+    currentQuestion = q;
+    $("questionText").textContent = q.text || "—";
     $("options").innerHTML = "";
+    questionShownAtMs = Date.now();
 
-    const opts = Array.isArray(q.options) ? q.options : [];
-    if(!opts.length){
-      msg("⚠️ هذا السؤال لا يحتوي خيارات (options). استورد الأسئلة من الأدمن.","err");
+    if(!Array.isArray(q.options) || q.options.length !== 4){
+      msg("⚠️ هذا السؤال لا يحتوي options. اطلب من الأدمن استيراد الأسئلة.","err");
       return;
     }
 
-    opts.forEach((opt,i)=>{
-      const b = document.createElement("button");
+    q.options.forEach((opt,i)=>{
+      const b=document.createElement("button");
       b.type="button";
       b.className="opt";
       b.textContent = `(${i+1}) ${opt}`;
-      b.onclick = ()=>submitAnswer(currentQuestionId, String(opt), i);
+      b.onclick = ()=>submitAnswer(i);
       $("options").appendChild(b);
     });
   }
 
-  let unsubQ = null;
-  const safeUnsub = (fn)=>{ try{ fn && fn(); }catch(_){} };
+  async function loadQuestionById(qid){
+    const qsnap = await getDoc(doc(db,"questions",qid));
+    if(!qsnap.exists()){
+      msg("❌ سؤال غير موجود (اطلب من الأدمن استيراد الأسئلة)","err");
+      return null;
+    }
+    return qsnap.data();
+  }
 
-  onSnapshot(raceRef, (snap)=>{
-    if(!snap.exists()) return;
-
-    const r = snap.data();
-    $("raceStatus").textContent = `status=${r.status||"-"} | index=${r.questionIndex ?? "-"}`;
-
-    if(!r.activeQuestionId){
-      $("questionText").textContent = "بانتظار السؤال…";
+  async function gotoIndex(i){
+    const order = raceState.questionsOrder || [];
+    if(i >= order.length){
+      $("questionText").textContent = "✅ انتهيت من الأسئلة";
       $("options").innerHTML = "";
+      msg("تم إنهاء 10 أسئلة.","ok");
       return;
     }
+    questionIndex = i;
+    const qid = order[i];
+    const q = await loadQuestionById(qid);
+    if(!q) return;
+    showQuestion(q);
+  }
 
-    const qid = r.activeQuestionId;
-    if(qid === currentQuestionId) return;
+  async function submitAnswer(optionIndex){
+    const name = getName();
+    if(!name){ msg("❌ سجل اسمك أولًا","err"); return; }
+    if(raceState.status !== "running"){ msg("بانتظار بدء الأدمن…"); return; }
 
-    currentQuestionId = qid;
-    questionShownAt = Date.now();
-    msg("");
+    const qid = raceState.questionsOrder[questionIndex];
+    if(!qid || answeredSet.has(qid)) return;
 
-    safeUnsub(unsubQ);
-    unsubQ = onSnapshot(doc(db,"questions",qid), async(qsnap)=>{
-      if(!qsnap.exists()){
-        $("questionText").textContent = "❌ السؤال غير موجود";
-        $("options").innerHTML = "";
-        msg("اذهب للأدمن واضغط (تصفير) أو استورد الأسئلة بقالب صحيح.","err");
-        return;
-      }
+    // منع ضغط متعدد
+    [...$("options").querySelectorAll("button")].forEach(b=>b.disabled=true);
 
-      const q = qsnap.data();
-      $("questionText").textContent = q.text || q.question || "—";
-      questionShownAt = Date.now();
+    const timeMs = questionShownAtMs ? Math.max(0, Date.now() - questionShownAtMs) : null;
+    const correctIndex = Number.isFinite(Number(currentQuestion?.correctIndex)) ? Number(currentQuestion.correctIndex) : -1;
+    const isCorrect = (correctIndex === optionIndex);
 
-      renderOptions(q);
-
-      try{
-        if(await alreadyAnswered(qid)){
-          msg("✅ أنت جاوبت هذا السؤال مسبقًا.","ok");
-          [...$("options").querySelectorAll("button")].forEach(b=>b.disabled=true);
-        }
-      }catch(_){}
+    await addDoc(answersCol,{
+      raceId: raceState.raceId,
+      playerName: name,
+      questionId: qid,
+      optionIndex,
+      isCorrect,
+      timeMs,
+      createdAt: serverTimestamp()
     });
+
+    answeredSet.add(qid);
+
+    // ينتقل مباشرة للسؤال التالي
+    await gotoIndex(questionIndex + 1);
+  }
+
+  // Listener للسباق
+  onSnapshot(raceRef, async (snap)=>{
+    if(!snap.exists()) return;
+    const r = snap.data();
+
+    raceState = {
+      status: r.status || "waiting",
+      raceId: r.raceId || null,
+      durationSec: Number.isFinite(Number(r.durationSec)) ? Number(r.durationSec) : 120,
+      questionsOrder: Array.isArray(r.questionsOrder) ? r.questionsOrder : []
+    };
+
+    $("raceStatus").textContent =
+      `status=${raceState.status} | raceId=${raceState.raceId||"null"} | questions=${raceState.questionsOrder.length}/10`;
+
+    // إذا بدأ سباق جديد (raceId تغير) ابدأ من الصفر
+    if(raceState.status === "running" && raceState.raceId){
+      if(!startedAtLocalMs){
+        startedAtLocalMs = Date.now();
+        questionIndex = 0;
+        answeredSet = new Set();
+        msg("🚀 بدأت المسابقة!","ok");
+        await gotoIndex(0);
+      }
+    }
+
+    // إذا انتهى السباق
+    if(raceState.status === "finished"){
+      $("options").innerHTML = "";
+      msg("⛔ انتهت المسابقة.","ok");
+    }
   });
+
+  // مؤقت دقيقتين محلي (لإغلاق الأسئلة بعد 120 ثانية)
+  setInterval(()=>{
+    if(raceState.status !== "running" || !raceState.raceId) return;
+    if(!startedAtLocalMs) return;
+    const elapsed = (Date.now() - startedAtLocalMs) / 1000;
+    const left = Math.max(0, raceState.durationSec - elapsed);
+    $("raceStatus").textContent =
+      `status=${raceState.status} | المتبقي=${left.toFixed(0)}ث | سؤال ${questionIndex+1}/10`;
+    if(left <= 0){
+      $("options").innerHTML = "";
+      $("questionText").textContent = "⏱ انتهى الوقت";
+      msg("انتهت الدقيقتين.","ok");
+    }
+  }, 500);
+
 </script>
 </body>
 </html>
