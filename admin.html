@@ -9,25 +9,26 @@
     .wrap{max-width:1200px;margin:auto;display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
     .card{background:#fff;border:1px solid #e6e8ef;border-radius:16px;padding:14px;box-shadow:0 8px 22px rgba(0,0,0,.06)}
     h1{margin:0 0 6px 0;font-size:22px}
+    h2{margin:14px 0 6px 0;font-size:18px}
     .sub{color:#666;margin-bottom:10px}
-    button,input,textarea{padding:12px;border-radius:12px;border:1px solid #d7dbe6;font-size:15px}
-    button{cursor:pointer}
+    button,textarea{padding:12px;border-radius:12px;border:1px solid #d7dbe6;font-size:15px}
+    button{cursor:pointer;font-weight:800}
     button:disabled{opacity:.6;cursor:not-allowed}
-    textarea{width:100%;min-height:220px;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace}
+    textarea{width:100%;min-height:240px;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .btn{font-weight:700}
     .btn-reset{background:#f3f4f6}
     .btn-start{background:#dcfce7}
     .btn-stop{background:#fee2e2}
-    .ok{color:#16a34a;font-weight:800}
-    .warn{color:#b45309;font-weight:800}
-    .err{color:#dc2626;font-weight:800}
+    .ok{color:#16a34a;font-weight:900}
+    .warn{color:#b45309;font-weight:900}
+    .err{color:#dc2626;font-weight:900}
     .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:#444;white-space:pre-wrap}
     table{width:100%;border-collapse:collapse}
     th,td{border-bottom:1px solid #eee;padding:8px;text-align:right;font-size:14px}
     th{background:#fafafa}
     .pill{display:inline-block;padding:6px 12px;border-radius:999px;background:#f3f4f6;font-size:12px;text-decoration:none;color:#111}
     .row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+    .big{font-size:16px;font-weight:900}
   </style>
 </head>
 <body>
@@ -36,30 +37,31 @@
   <div class="card">
     <div class="row">
       <div>
-        <h1>🎛 لوحة الأدمن (سباق دقيقتين / 10 أسئلة)</h1>
-        <div class="sub">الطريقة الصحيحة: <b>تنظيف (مرة واحدة)</b> → <b>استيراد 10 أسئلة</b> → <b>بدء السباق</b>. بعدها المتسابق يمشي تلقائي.</div>
+        <h1>🎛 لوحة الأدمن (120 ثانية / 10 أسئلة)</h1>
+        <div class="sub">التشغيل الصحيح: <b>تنظيف</b> (مرة واحدة) → <b>استيراد 10 أسئلة</b> → <b>بدء</b>. الإنهاء تلقائي بعد 120 ثانية.</div>
       </div>
-      <a class="pill" href="./?v=999" target="_blank">فتح رابط المتسابق</a>
+      <div class="row">
+        <a class="pill" href="./?v=999" target="_blank">فتح رابط المتسابق</a>
+        <a class="pill" href="./admin.html?v=999" target="_self">تحديث (كسر كاش)</a>
+      </div>
     </div>
 
     <div class="grid" style="margin-top:10px">
-      <button class="btn btn-reset" id="wipeBtn" type="button">🧹 تنظيف كامل (players/answers/questions)</button>
-      <button class="btn" id="importBtn" type="button">⬆️ استيراد 10 أسئلة</button>
+      <button class="btn-reset" id="wipeBtn" type="button">🧹 تنظيف كامل (players/answers/questions)</button>
+      <button id="importBtn" type="button">⬆️ استيراد/تحديث 10 أسئلة</button>
     </div>
 
-    <div style="margin-top:10px" class="grid">
-      <button class="btn btn-start" id="startBtn" type="button">▶️ بدء السباق (120 ثانية)</button>
-      <button class="btn btn-stop" id="stopBtn" type="button">⛔ إنهاء مبكر</button>
+    <div class="grid" style="margin-top:10px">
+      <button class="btn-start" id="startBtn" type="button">▶️ بدء السباق (120 ثانية)</button>
+      <button class="btn-stop" id="stopBtn" type="button">⛔ إنهاء السباق الآن</button>
     </div>
 
-    <div style="margin-top:10px" id="msg" class="warn">جاهز…</div>
+    <div style="margin-top:10px" id="msg" class="warn big">جاهز…</div>
     <div id="dbg" class="mono" style="margin-top:6px"></div>
     <div id="err" class="mono err" style="margin-top:6px"></div>
 
-    <hr style="margin:14px 0">
-
-    <h2 style="margin:0 0 6px 0">📥 قالب الأسئلة (JSON)</h2>
-    <div class="sub">لازم كل سؤال يحتوي: <b>text</b> + <b>options(4)</b> + <b>correctIndex(0..3)</b></div>
+    <h2>📥 الأسئلة (JSON)</h2>
+    <div class="sub">عدّل الأسئلة هنا (لازم 10 أسئلة، وكل سؤال 4 خيارات و correctIndex من 0 إلى 3) ثم اضغط “استيراد”.</div>
     <textarea id="qJson"></textarea>
   </div>
 
@@ -70,10 +72,8 @@
       <tbody id="playersT"></tbody>
     </table>
 
-    <hr style="margin:14px 0">
-
-    <h1>🏆 الترتيب النهائي</h1>
-    <div class="sub">الترتيب: الصحيح الأعلى ثم الوقت الأقل.</div>
+    <h1 style="margin-top:16px">🏆 الترتيب النهائي</h1>
+    <div class="sub">الترتيب: الصحيح الأعلى ثم الوقت الأقل. يظهر ويتحدث تلقائيًا أثناء السباق وبعد نهايته.</div>
     <table>
       <thead><tr><th>#</th><th>الاسم</th><th>الصحيح</th><th>الوقت (ث)</th><th>مكتمل</th></tr></thead>
       <tbody id="boardT"></tbody>
@@ -114,10 +114,10 @@
   const boardT   = document.getElementById("boardT");
   const qJsonEl  = document.getElementById("qJson");
 
-  const say = (t, cls="warn") => { msgEl.className = cls; msgEl.textContent = t; };
+  const say = (t, cls="warn") => { msgEl.className = cls + " big"; msgEl.textContent = t; };
   const setErr = (t="") => { errEl.textContent = t; };
 
-  // قالب افتراضي (10 أسئلة) — عدّل النصوص فقط إذا تبي
+  // ✅ قالب افتراضي 10 أسئلة (عدّلها براحتك)
   qJsonEl.value = JSON.stringify([
     { text:"أين وُلد الإمام محمد الجواد (ع)؟", options:["المدينة المنورة","مكة المكرمة","الكوفة","بغداد"], correctIndex:0 },
     { text:"من هو والد الإمام الجواد (ع)؟", options:["الإمام الكاظم (ع)","الإمام الرضا (ع)","الإمام الهادي (ع)","الإمام الصادق (ع)"], correctIndex:1 },
@@ -125,10 +125,10 @@
     { text:"في أي عمر تقريبًا تولّى الإمام الجواد (ع) الإمامة؟", options:["5 سنوات","8 سنوات","15 سنة","20 سنة"], correctIndex:1 },
     { text:"أين استُشهد الإمام الجواد (ع)؟", options:["المدينة","مكة","بغداد","الكوفة"], correctIndex:2 },
     { text:"من ألقاب الإمام الجواد (ع)؟", options:["الجواد","السجاد","الباقر","الصدّيق"], correctIndex:0 },
-    { text:"كم عدد الخيارات في كل سؤال في هذه المسابقة؟", options:["2","3","4","5"], correctIndex:2 },
-    { text:"مدة المسابقة الكاملة حسب الإعداد؟", options:["60 ثانية","90 ثانية","120 ثانية","180 ثانية"], correctIndex:2 },
+    { text:"كم عدد أسئلة المسابقة؟", options:["5","10","15","20"], correctIndex:1 },
+    { text:"مدة المسابقة في هذا الإعداد؟", options:["60 ثانية","90 ثانية","120 ثانية","180 ثانية"], correctIndex:2 },
     { text:"الترتيب النهائي يعتمد على؟", options:["الاسم فقط","السرعة فقط","الصحيح ثم الوقت","الوقت فقط"], correctIndex:2 },
-    { text:"كم عدد أسئلة المسابقة؟", options:["5","10","15","20"], correctIndex:1 }
+    { text:"كم عدد الخيارات في كل سؤال؟", options:["2","3","4","5"], correctIndex:2 }
   ], null, 2);
 
   async function deleteAllIn(colRef, batchSize=200){
@@ -140,6 +140,7 @@
     if(snap.size === batchSize) await deleteAllIn(colRef, batchSize);
   }
 
+  // ✅ تنظيف
   document.getElementById("wipeBtn").onclick = async()=>{
     setErr("");
     try{
@@ -162,6 +163,7 @@
     }
   };
 
+  // ✅ استيراد 10 أسئلة بصيغة صحيحة (options مضمونة)
   document.getElementById("importBtn").onclick = async()=>{
     setErr("");
     try{
@@ -203,23 +205,24 @@
         updatedAt: serverTimestamp()
       }, {merge:true});
 
-      say("✅ تم استيراد 10 أسئلة بصيغة صحيحة (options مضمونة)","ok");
+      say("✅ تم استيراد/تحديث 10 أسئلة (options مضمونة)","ok");
     }catch(e){
       say("❌ فشل الاستيراد","err");
       setErr(e?.message||String(e));
     }
   };
 
+  // ✅ بدء السباق
   document.getElementById("startBtn").onclick = async()=>{
     setErr("");
     try{
       const rs = await getDoc(raceRef);
       const r = rs.exists()? rs.data() : {};
       const order = Array.isArray(r.questionsOrder) ? r.questionsOrder : [];
-      if(order.length !== 10) throw new Error("استورد الأسئلة أولًا (لازم 10).");
+      if(order.length !== 10) throw new Error("استورد الأسئلة أولاً (لازم 10).");
 
-      // raceId جديد يمنع تداخل بيانات قديمة
       const raceId = String(Date.now());
+
       await setDoc(raceRef, {
         status:"running",
         raceId,
@@ -235,28 +238,69 @@
     }
   };
 
+  // ✅ إنهاء الآن
   document.getElementById("stopBtn").onclick = async()=>{
     setErr("");
     try{
       await updateDoc(raceRef, { status:"finished", updatedAt: serverTimestamp() });
-      say("⛔ تم الإنهاء المبكر","ok");
+      say("⛔ تم إنهاء السباق","ok");
     }catch(e){
       say("❌ فشل الإنهاء","err");
       setErr(e?.message||String(e));
     }
   };
 
-  // Debug
-  onSnapshot(raceRef, (snap)=>{
+  // ✅ إغلاق تلقائي عند انتهاء 120 ثانية (سيرفر/Firestore)
+  // يعمل حتى لو المتسابقين متأخرين/متصفحات مختلفة.
+  let finishGuardTimer = null;
+
+  onSnapshot(raceRef, async (snap)=>{
     if(!snap.exists()){
       dbgEl.textContent = "race/current غير موجود";
       return;
     }
+
     const r = snap.data();
-    dbgEl.textContent = `status=${r.status||"-"} | raceId=${r.raceId||"null"} | durationSec=${r.durationSec||120}`;
+    const status = r.status || "-";
+    const raceId = r.raceId || "null";
+    const dur = Number.isFinite(Number(r.durationSec)) ? Number(r.durationSec) : 120;
+
+    let startedMs = null;
+    if(r.startedAt?.toMillis) startedMs = r.startedAt.toMillis();
+
+    // Debug
+    if(startedMs){
+      const left = Math.max(0, (startedMs + dur*1000 - Date.now())/1000);
+      dbgEl.textContent = `status=${status} | raceId=${raceId} | duration=${dur}s | المتبقي≈${left.toFixed(0)}ث`;
+    }else{
+      dbgEl.textContent = `status=${status} | raceId=${raceId} | duration=${dur}s`;
+    }
+
+    // Guard: إذا Running وانتهى الوقت → اقفل تلقائي
+    if(status === "running" && startedMs){
+      const leftMs = (startedMs + dur*1000) - Date.now();
+
+      // نظف مؤقت قديم
+      if(finishGuardTimer) { clearTimeout(finishGuardTimer); finishGuardTimer = null; }
+
+      // اقفل بعد المتبقي
+      finishGuardTimer = setTimeout(async ()=>{
+        try{
+          const nowSnap = await getDoc(raceRef);
+          if(!nowSnap.exists()) return;
+          const now = nowSnap.data();
+          const nowStatus = now.status;
+          const nowRaceId = now.raceId;
+          if(nowStatus === "running" && nowRaceId === r.raceId){
+            await updateDoc(raceRef, { status:"finished", updatedAt: serverTimestamp() });
+            say("🏁 انتهى الوقت — تم تثبيت النتائج تلقائياً","ok");
+          }
+        }catch(_){}
+      }, Math.max(0, leftMs));
+    }
   });
 
-  // Players (live)
+  // Players live
   onSnapshot(query(playersCol, orderBy("updatedAt","desc"), limit(50)), (snap)=>{
     playersT.innerHTML="";
     let i=1;
@@ -269,46 +313,51 @@
     });
   });
 
-  // Leaderboard (raceId filter)
-  let currentRaceId = null;
-  onSnapshot(raceRef, async (snap)=>{
+  // Leaderboard (raceId)
+  let unsubAnswers = null;
+  const safeUnsub = (fn)=>{ try{ fn && fn(); }catch(_){} };
+
+  onSnapshot(raceRef, (snap)=>{
     if(!snap.exists()) return;
     const r = snap.data();
     const raceId = r.raceId || null;
-    currentRaceId = raceId;
 
-    // لا نعرض ترتيب إلا إذا فيه raceId
-    boardT.innerHTML="";
+    safeUnsub(unsubAnswers);
+    boardT.innerHTML = "";
+
     if(!raceId) return;
 
-    onSnapshot(query(answersCol, where("raceId","==", raceId), orderBy("createdAt","asc"), limit(5000)), (asnap)=>{
-      const agg = new Map(); // name -> {correct,timeMs,answeredCount}
-      asnap.forEach(d=>{
-        const a=d.data();
-        const name=a.playerName||"—";
-        if(!agg.has(name)) agg.set(name, {correct:0, timeMs:0, answeredCount:0});
-        const row = agg.get(name);
-        row.correct += a.isCorrect ? 1 : 0;
-        row.timeMs  += Number.isFinite(Number(a.timeMs)) ? Number(a.timeMs) : 0;
-        row.answeredCount += 1;
-      });
+    unsubAnswers = onSnapshot(
+      query(answersCol, where("raceId","==", raceId), orderBy("createdAt","asc"), limit(8000)),
+      (asnap)=>{
+        const agg = new Map(); // name -> {correct,timeMs,count}
+        asnap.forEach(d=>{
+          const a=d.data();
+          const name=a.playerName||"—";
+          if(!agg.has(name)) agg.set(name, {correct:0, timeMs:0, count:0});
+          const row=agg.get(name);
+          row.correct += a.isCorrect ? 1 : 0;
+          row.timeMs  += Number.isFinite(Number(a.timeMs)) ? Number(a.timeMs) : 0;
+          row.count   += 1;
+        });
 
-      const arr = [...agg.entries()].map(([name,v])=>({
-        name,
-        correct:v.correct,
-        timeSec:(v.timeMs/1000),
-        done:(v.answeredCount>=10)
-      }));
+        const arr = [...agg.entries()].map(([name,v])=>({
+          name,
+          correct:v.correct,
+          timeSec:v.timeMs/1000,
+          done:v.count>=10
+        }));
 
-      arr.sort((x,y)=>(y.correct-x.correct) || (x.timeSec-y.timeSec));
+        arr.sort((x,y)=>(y.correct-x.correct) || (x.timeSec-y.timeSec));
 
-      boardT.innerHTML="";
-      arr.forEach((r,idx)=>{
-        const tr=document.createElement("tr");
-        tr.innerHTML = `<td>${idx+1}</td><td>${r.name}</td><td class="ok">${r.correct}</td><td>${r.timeSec.toFixed(1)}</td><td>${r.done ? "✅" : "—"}</td>`;
-        boardT.appendChild(tr);
-      });
-    });
+        boardT.innerHTML="";
+        arr.forEach((r,idx)=>{
+          const tr=document.createElement("tr");
+          tr.innerHTML = `<td>${idx+1}</td><td>${r.name}</td><td class="ok">${r.correct}</td><td>${r.timeSec.toFixed(1)}</td><td>${r.done ? "✅" : "—"}</td>`;
+          boardT.appendChild(tr);
+        });
+      }
+    );
   });
 
 </script>
