@@ -4,155 +4,189 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>سباق الجواد — المتسابق</title>
-
   <style>
     body{font-family:system-ui,Tahoma;background:#f6f7fb;margin:0;padding:16px}
-    .card{background:#fff;border-radius:16px;padding:16px;margin:auto;max-width:520px;box-shadow:0 10px 25px rgba(0,0,0,.08)}
-    h1{margin-top:0}
+    .card{background:#fff;border-radius:16px;padding:16px;margin:auto;max-width:560px;box-shadow:0 10px 25px rgba(0,0,0,.08)}
+    h1{margin:0 0 8px 0}
     input,button{width:100%;padding:14px;border-radius:12px;border:1px solid #ddd;font-size:16px;margin-top:8px}
     button{cursor:pointer}
-    .opt{background:#f1f5f9;margin-top:8px}
+    .opt{background:#f1f5f9;margin-top:10px;text-align:right}
     .opt:hover{background:#e2e8f0}
-    .ok{color:#16a34a;font-weight:700}
-    .err{color:#dc2626;font-weight:700}
-    .mono{font-family:monospace;font-size:13px;color:#555}
+    .ok{color:#16a34a;font-weight:800}
+    .err{color:#dc2626;font-weight:800}
+    .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#555;white-space:pre-wrap}
+    .muted{color:#666}
   </style>
 </head>
 <body>
-
 <div class="card">
   <h1>🏁 سباق الجواد — المتسابق</h1>
+  <div class="muted">سجّل اسمك ثم اختر الإجابة عند ظهور الخيارات.</div>
 
-  <div>
-    <label>اسمك:</label>
-    <input id="nameInput" placeholder="اكتب اسمك" />
-    <button onclick="register()">تسجيل</button>
-  </div>
+  <input id="nameInput" placeholder="اكتب اسمك" />
+  <button id="joinBtn" type="button">تسجيل</button>
+  <button id="clearBtn" type="button">مسح الاسم</button>
 
-  <hr>
+  <div id="raceStatus" class="mono" style="margin-top:10px">بانتظار السباق…</div>
+  <div id="msg" style="margin-top:8px"></div>
 
-  <div id="raceStatus" class="mono">بانتظار السباق…</div>
+  <hr style="margin:14px 0">
 
   <h3 id="questionText">—</h3>
   <div id="options"></div>
-
-  <div id="msg"></div>
 </div>
 
 <script type="module">
-/* ================= FIREBASE ================= */
-const firebaseConfig = {
-  apiKey: "AIzaSyCXRjGFao0aRxTU1zPnM80-I7NW5YP-yBM",
-  authDomain: "jawad-race.firebaseapp.com",
-  projectId: "jawad-race",
-  storageBucket: "jawad-race.firebasestorage.app",
-  messagingSenderId: "677185572718",
-  appId: "1:677185572718:web:91c4674236efce1d6efb7f"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyCXRjGFao0aRxTU1zPnM80-I7NW5YP-yBM",
+    authDomain: "jawad-race.firebaseapp.com",
+    projectId: "jawad-race",
+    storageBucket: "jawad-race.firebasestorage.app",
+    messagingSenderId: "677185572718",
+    appId: "1:677185572718:web:91c4674236efce1d6efb7f"
+  };
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getFirestore, doc, collection, addDoc,
-  onSnapshot, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore, doc, collection, addDoc, onSnapshot, serverTimestamp,
+    query, where, limit, getDocs
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
 
-/* ================= REFERENCES ================= */
-const raceRef      = doc(db, "race", "current");
-const questionsCol = collection(db, "questions");
-const playersCol   = collection(db, "players");
-const answersCol   = collection(db, "answers");
+  const raceRef      = doc(db, "race", "current");
+  const questionsCol = collection(db, "questions");
+  const playersCol   = collection(db, "players");
+  const answersCol   = collection(db, "answers");
 
-/* ================= STATE ================= */
-let currentQuestionId = null;
-let questionShownAt   = null;
+  const $ = (id)=>document.getElementById(id);
+  const msg = (t, cls="") => { $("msg").innerHTML = `<div class="${cls}">${t}</div>`; };
 
-/* ================= HELPERS ================= */
-const $ = id => document.getElementById(id);
-const msg = (t,c="") => $("msg").innerHTML = `<div class="${c}">${t}</div>`;
+  const LS = "jr_player_name";
+  const getName = ()=>localStorage.getItem(LS)||"";
+  const setName = (v)=>localStorage.setItem(LS,v);
+  const clearName = ()=>localStorage.removeItem(LS);
 
-/* ================= REGISTER ================= */
-window.register = async () => {
-  const name = $("nameInput").value.trim();
-  if(!name){ msg("اكتب اسمك","err"); return; }
+  let currentQuestionId = null;
+  let questionShownAt   = null;
 
-  localStorage.setItem("playerName", name);
-  await addDoc(playersCol, {
-    name,
-    createdAt: serverTimestamp()
-  });
-
-  msg("✅ تم التسجيل","ok");
-};
-
-/* ================= RACE LISTENER ================= */
-onSnapshot(raceRef, snap => {
-  if(!snap.exists()) return;
-
-  const r = snap.data();
-  $("raceStatus").textContent =
-    `status=${r.status} | index=${r.questionIndex}`;
-
-  if(r.activeQuestionId){
-    loadQuestion(r.activeQuestionId);
+  function renderName(){
+    const n = getName();
+    $("nameInput").value = n || "";
   }
-});
+  renderName();
 
-/* ================= LOAD QUESTION ================= */
-async function loadQuestion(qid){
-  if(qid === currentQuestionId) return;
-  currentQuestionId = qid;
+  $("joinBtn").onclick = async()=>{
+    const name = $("nameInput").value.trim();
+    if(!name){ msg("اكتب اسمك","err"); return; }
+    try{
+      await addDoc(playersCol, { name, createdAt: serverTimestamp() });
+      setName(name);
+      msg("✅ تم التسجيل","ok");
+    }catch(e){
+      msg("❌ فشل التسجيل: "+(e?.message||e),"err");
+    }
+  };
 
-  const qRef = doc(db,"questions",qid);
-  onSnapshot(qRef, qsnap => {
-    if(!qsnap.exists()){
-      msg("❌ السؤال غير موجود","err");
+  $("clearBtn").onclick = ()=>{
+    clearName();
+    $("nameInput").value="";
+    msg("تم مسح الاسم");
+  };
+
+  async function alreadyAnswered(qid){
+    const name = getName();
+    if(!name) return false;
+    const qy = query(answersCol, where("questionId","==", qid), where("playerName","==", name), limit(1));
+    const s = await getDocs(qy);
+    return !s.empty;
+  }
+
+  async function submitAnswer(qid, optionText, optionIndex){
+    const name = getName();
+    if(!name){ msg("❌ سجل اسمك أولًا","err"); return; }
+
+    const timeMs = questionShownAt ? Math.max(0, Date.now() - questionShownAt) : null;
+
+    await addDoc(answersCol,{
+      questionId: qid,
+      playerName: name,
+      optionText,
+      optionIndex,
+      timeMs,
+      createdAt: serverTimestamp()
+    });
+
+    msg("✅ تم تسجيل الإجابة","ok");
+    // اقفل الأزرار
+    [...$("options").querySelectorAll("button")].forEach(b=>b.disabled=true);
+  }
+
+  function renderOptions(q){
+    $("options").innerHTML = "";
+
+    const opts = Array.isArray(q.options) ? q.options : [];
+    if(!opts.length){
+      msg("⚠️ هذا السؤال لا يحتوي خيارات (options). استورد الأسئلة من الأدمن.","err");
       return;
     }
 
-    const q = qsnap.data();
-    $("questionText").textContent = q.text || q.question || "—";
-    $("options").innerHTML = "";
-
-    questionShownAt = Date.now();
-
-    const opts = q.options || [
-      q.option1,q.option2,q.option3,q.option4
-    ];
-
     opts.forEach((opt,i)=>{
-      if(!opt) return;
       const b = document.createElement("button");
+      b.type="button";
       b.className="opt";
-      b.textContent = opt;
-      b.onclick = ()=>submitAnswer(qid,opt,i);
+      b.textContent = `(${i+1}) ${opt}`;
+      b.onclick = ()=>submitAnswer(currentQuestionId, String(opt), i);
       $("options").appendChild(b);
     });
+  }
+
+  let unsubQ = null;
+  const safeUnsub = (fn)=>{ try{ fn && fn(); }catch(_){} };
+
+  onSnapshot(raceRef, (snap)=>{
+    if(!snap.exists()) return;
+
+    const r = snap.data();
+    $("raceStatus").textContent = `status=${r.status||"-"} | index=${r.questionIndex ?? "-"}`;
+
+    if(!r.activeQuestionId){
+      $("questionText").textContent = "بانتظار السؤال…";
+      $("options").innerHTML = "";
+      return;
+    }
+
+    const qid = r.activeQuestionId;
+    if(qid === currentQuestionId) return;
+
+    currentQuestionId = qid;
+    questionShownAt = Date.now();
+    msg("");
+
+    safeUnsub(unsubQ);
+    unsubQ = onSnapshot(doc(db,"questions",qid), async(qsnap)=>{
+      if(!qsnap.exists()){
+        $("questionText").textContent = "❌ السؤال غير موجود";
+        $("options").innerHTML = "";
+        msg("اذهب للأدمن واضغط (تصفير) أو استورد الأسئلة بقالب صحيح.","err");
+        return;
+      }
+
+      const q = qsnap.data();
+      $("questionText").textContent = q.text || q.question || "—";
+      questionShownAt = Date.now();
+
+      renderOptions(q);
+
+      try{
+        if(await alreadyAnswered(qid)){
+          msg("✅ أنت جاوبت هذا السؤال مسبقًا.","ok");
+          [...$("options").querySelectorAll("button")].forEach(b=>b.disabled=true);
+        }
+      }catch(_){}
+    });
   });
-}
-
-/* ================= SUBMIT ANSWER ================= */
-async function submitAnswer(qid, optionText, optionIndex){
-  const name = localStorage.getItem("playerName");
-  if(!name){ msg("❌ لم يتم التسجيل","err"); return; }
-
-  const timeMs = questionShownAt
-    ? Date.now() - questionShownAt
-    : null;
-
-  await addDoc(answersCol,{
-    questionId: qid,
-    playerName: name,
-    optionText,
-    optionIndex,
-    timeMs,
-    createdAt: serverTimestamp()
-  });
-
-  msg("✅ تم تسجيل الإجابة","ok");
-}
 </script>
 </body>
 </html>
